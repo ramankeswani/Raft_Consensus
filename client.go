@@ -11,11 +11,11 @@ import (
 func client(port int, c chan int) {
 
 	if port == 0 {
-		fmt.Fprintf(os.Stderr, "IP not given")
+		fmt.Fprintf(os.Stderr, "Port not given")
 		os.Exit(1)
 	}
 
-	address := "127.0.0.1" + strconv.Itoa(port)
+	address := "127.0.0.1:" + strconv.Itoa(port)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", address)
 	checkError(err, "client")
 
