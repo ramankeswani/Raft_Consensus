@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"time"
 )
 
 func server(myPort int, c chan int) {
 
-	service := ":5000"
+	service := ":" + strconv.Itoa(myPort)
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err, "server")
@@ -25,14 +26,13 @@ func server(myPort int, c chan int) {
 		}
 		fmt.Println("server accepted", conn.RemoteAddr())
 
-		//inp, err := ioutil.ReadAll(conn)
 		inp, err := conn.Read(request)
 		checkError(err, "client")
 
 		fmt.Println(string(request[:inp]))
 
 		daytime := time.Now().String()
-		conn.Write([]byte(daytime))
-		//conn.Close()
+		conn.Write([]byte(daytime + " port is " + strconv.Itoa(myPort)))
+		conn.Close()
 	}
 }

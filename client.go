@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func client(port int, c chan int) {
+func client(port int) {
 
 	if port == 0 {
 		fmt.Fprintf(os.Stderr, "Port not given")
@@ -33,6 +33,4 @@ func client(port int, c chan int) {
 
 	fmt.Println(string(request[:result]))
 
-	c <- 10
-	os.Exit(0)
 }
