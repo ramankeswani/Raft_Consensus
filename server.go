@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func server(myPort int, c chan int) {
+func server(myPort int, c chan int, nodeID string) {
 
 	service := ":" + strconv.Itoa(myPort)
 
@@ -24,7 +24,7 @@ func server(myPort int, c chan int) {
 			fmt.Println("Error at server while accepting")
 			continue
 		}
-		fmt.Println("server accepted", conn.RemoteAddr())
+		fmt.Println("Server accepted From: ", conn.RemoteAddr())
 
 		inp, err := conn.Read(request)
 		checkError(err, "client")
@@ -32,7 +32,19 @@ func server(myPort int, c chan int) {
 		fmt.Println(string(request[:inp]))
 
 		daytime := time.Now().String()
-		conn.Write([]byte(daytime + " port is " + strconv.Itoa(myPort)))
-		conn.Close()
+		conn.Write([]byte(daytime + " nodeID is " + nodeID))
+		//conn.Close()
+
+		go handleRequests(conn)
+	}
+}
+
+func handleRequests(conn net.Conn) {
+
+	for {
+		request := make([]byte, 128)
+		inp, err := conn.Read(request)
+		checkError(err, "Client HandleRequests")
+		fmt.Println(string(request[:inp]))
 	}
 }

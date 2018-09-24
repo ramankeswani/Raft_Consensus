@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -18,7 +17,7 @@ type nodes []node
 
 func tableCluster() {
 
-	os.Remove("./raft.db")
+	/* os.Remove("./raft.db")
 
 	db, err := sql.Open("sqlite3", "./raft.db")
 	checkErr(err)
@@ -33,7 +32,7 @@ func tableCluster() {
 	_, err = insertStatement.Exec("ALPHA", "127.0.0.1", 5000)
 	_, err = insertStatement.Exec("BETA", "127.0.0.1", 6000)
 	_, err = insertStatement.Exec("GAMMA", "127.0.0.1", 7000)
-	checkErr(err)
+	checkErr(err) */
 }
 
 func getNodesFromDB() nodes {
