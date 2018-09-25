@@ -21,17 +21,16 @@ func main() {
 
 	myPort, _ = strconv.Atoi(os.Args[1])
 	nodeID = os.Args[2]
+	fmt.Println("I AM", nodeID)
 	c := make(chan int)
 	go server(myPort, c, nodeID)
 
 	tableCluster()
 	ns := getNodesFromDB()
 	populateOtherNodes(ns)
-	fmt.Println("Data From DB:")
-	fmt.Printf("%+v\n", ns)
-	fmt.Printf("compareing")
+
 	fmt.Println(strings.Compare(nodeID, "ALPHA") == 0)
-	time.Sleep(10 * time.Second)
+
 	go sendConnectionRequest(otherNodes)
 	if strings.Compare(nodeID, "ALPHA") == 0 {
 		go heartbeat(otherNodes, nodeID)
@@ -43,11 +42,11 @@ func main() {
 
 func sendConnectionRequest(ns nodes) {
 
+	time.Sleep(3 * time.Second)
 	fmt.Println("\n sendConnectionRequest Starts")
 	for n := range ns {
-		time.Sleep(3 * time.Second)
 		fmt.Println(ns[n])
-		go client(ns[n].port)
+		go client(ns[n].port, myPort)
 	}
 	fmt.Println("\n sendConnectionRequest Ends")
 }

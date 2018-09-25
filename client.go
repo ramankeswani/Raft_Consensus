@@ -5,10 +5,9 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"time"
 )
 
-func client(port int) {
+func client(port int, myPort int) {
 
 	if port == 0 {
 		fmt.Fprintf(os.Stderr, "Port not given")
@@ -22,8 +21,7 @@ func client(port int) {
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
 	checkError(err, "client")
 
-	time.Sleep(2 * time.Second)
-	_, err = conn.Write([]byte("Client sending data"))
+	_, err = conn.Write([]byte("First request" + strconv.Itoa(myPort)))
 	checkError(err, "client")
 
 	request := make([]byte, 128)
