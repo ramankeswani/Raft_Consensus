@@ -12,6 +12,8 @@ var myPort int
 var nodeID string
 var otherNodes nodes
 
+// Entry Point for the Application
+// Usage go run port nodeID
 func main() {
 
 	if len(os.Args) != 3 {
@@ -21,20 +23,25 @@ func main() {
 
 	myPort, _ = strconv.Atoi(os.Args[1])
 	nodeID = os.Args[2]
-	fmt.Println("I AM", nodeID)
+	fmt.Println("I AM: ", nodeID)
+	fmt.Println("------------------------------")
+
 	c := make(chan int)
+	// Starting Server
 	go server(myPort, c, nodeID)
 
-	tableCluster()
 	ns := getNodesFromDB()
 	populateOtherNodes(ns)
 
-	fmt.Println(strings.Compare(nodeID, "ALPHA") == 0)
-
-	go sendConnectionRequest(otherNodes)
+	// TO-DO: Assuming node ALPHA to be the leader.
 	if strings.Compare(nodeID, "ALPHA") == 0 {
 		go heartbeat(otherNodes, nodeID)
 	}
+
+	// Send Intitial Connection Requests to Other Nodes
+	go sendConnectionRequest(otherNodes)
+
+	// Blocking to keep the main routine alive forever
 	fmt.Println(<-c)
 	fmt.Println("Program ends")
 
@@ -42,13 +49,17 @@ func main() {
 
 func sendConnectionRequest(ns nodes) {
 
+	// Sleep till other nodes are ready
 	time.Sleep(3 * time.Second)
-	fmt.Println("\n sendConnectionRequest Starts")
+
+	fmt.Println("\nSendConnectionRequest Starts")
 	for n := range ns {
 		fmt.Println(ns[n])
 		go client(ns[n].port, myPort)
 	}
-	fmt.Println("\n sendConnectionRequest Ends")
+	fmt.Println("SendConnectionRequest Ends")
+	fmt.Println("------------------------------")
+
 }
 
 func checkError(err error, src string) {

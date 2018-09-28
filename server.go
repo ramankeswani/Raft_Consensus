@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Server Module for Node
 func server(myPort int, c chan int, nodeID string) {
 
 	service := ":" + strconv.Itoa(myPort)
@@ -18,11 +19,13 @@ func server(myPort int, c chan int, nodeID string) {
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	checkError(err, "server")
 
-	timer := time.NewTimer(15 * time.Second)
+	timer := time.NewTimer(time.Duration(heartbeatTimeOut) * time.Second)
+	// Routine to track HeartBeat Timeout
 	go heartbeatChecker(timer)
 
 	for {
 		request := make([]byte, 128)
+
 		fmt.Println("Server Ready to Accept")
 		conn, err := listener.Accept()
 		if err != nil {
@@ -34,18 +37,20 @@ func server(myPort int, c chan int, nodeID string) {
 		inp, err := conn.Read(request)
 		checkError(err, "client")
 
-		fmt.Println(string(request[:inp]))
+		fmt.Println("Server Received (Just After Accept):", string(request[:inp]))
 
 		daytime := time.Now().String()
 		conn.Write([]byte(daytime + " nodeID is " + nodeID))
 		//conn.Close()
 
+		// Routine to accept messages
 		go handleRequests(conn, timer)
 
 	}
 
 }
 
+// Accept Messages once a connection is established
 func handleRequests(conn net.Conn, timer *time.Timer) {
 
 	for {
@@ -53,15 +58,18 @@ func handleRequests(conn net.Conn, timer *time.Timer) {
 		inp, err := conn.Read(request)
 		checkError(err, "Client HandleRequests")
 		data := string(request[:inp])
+		// Reset Timer if received message was a heartbeat
 		go updateHBFlag(data, timer)
-		fmt.Println(data)
+		fmt.Println("Received:", data)
 	}
 }
 
 func heartbeatChecker(timer *time.Timer) {
 
 	<-timer.C
-	fmt.Println("NO HEARTBEAT SORRY")
+	fmt.Println("------------------------------")
+	fmt.Println("NO HEARTBEAT RECIEVED WITHIN TIMEOUT")
+	fmt.Println("------------------------------")
 }
 
 func updateHBFlag(data string, timer *time.Timer) {

@@ -62,6 +62,7 @@ func getNodesFromDB() nodes {
 	}
 
 	fmt.Println("getNodesFromDB Ends")
+	fmt.Println("------------------------------")
 	return ns
 
 }

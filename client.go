@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// Client module
 func client(port int, myPort int) {
 
 	if port == 0 {
@@ -29,6 +30,6 @@ func client(port int, myPort int) {
 	result, err := conn.Read(request)
 	checkError(err, "client")
 
-	fmt.Println(string(request[:result]))
+	fmt.Println("Handshake Response: ", string(request[:result]))
 
 }

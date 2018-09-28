@@ -8,16 +8,17 @@ import (
 )
 
 var connections []*net.TCPConn
-var timeout = 20
 
+// Initialise Heartbeat
 func heartbeat(otherNodes nodes, myNodeID string) {
 
 	time.Sleep(3 * time.Second)
 	fmt.Println("Heartbeat Starts")
 	establishConn(otherNodes)
 	for {
-		time.Sleep(time.Duration(timeout) * time.Second)
+		time.Sleep(time.Duration(heartbeatInterval) * time.Second)
 		for conn := range connections {
+			// Send heartbeat after interval time
 			go sendHeartbeat(connections[conn])
 		}
 		fmt.Println("Heartbeat Ends")
@@ -39,8 +40,7 @@ func establishConn(ns nodes) {
 		conn, err := net.DialTCP("tcp", nil, tcpAddr)
 		checkError(err, "Heartbeat")
 
-		_, err = conn.Write([]byte("First from heartbeat"))
-
+		_, err = conn.Write([]byte("First Message from heartbeat"))
 		connections = append(connections, conn)
 	}
 }
