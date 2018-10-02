@@ -8,7 +8,7 @@ import (
 )
 
 // Client module
-func client(port int, myPort int) {
+func client(port int, myPort int, connChan chan *net.TCPConn) {
 
 	if port == 0 {
 		fmt.Fprintf(os.Stderr, "Port not given")
@@ -20,6 +20,8 @@ func client(port int, myPort int) {
 	checkError(err, "client")
 
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	connChan <- conn
+	fmt.Println("inserted into channel")
 	checkError(err, "client")
 
 	_, err = conn.Write([]byte("First request" + strconv.Itoa(myPort)))

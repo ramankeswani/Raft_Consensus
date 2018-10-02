@@ -3,20 +3,19 @@ package main
 import (
 	"fmt"
 	"net"
-	"strconv"
 	"time"
 )
 
-var connections []*net.TCPConn
-
 // Initialise Heartbeat
-func heartbeat(otherNodes nodes, myNodeID string) {
+func heartbeat(otherNodes nodes, myNodeID string, connections []*net.TCPConn) {
 
-	time.Sleep(3 * time.Second)
+	//time.Sleep(3 * time.Second)
+
 	fmt.Println("Heartbeat Starts")
-	establishConn(otherNodes)
+
 	for {
-		time.Sleep(time.Duration(heartbeatInterval) * time.Second)
+		break
+		time.Sleep(time.Duration(heartbeatInterval) * time.Millisecond)
 		for conn := range connections {
 			// Send heartbeat after interval time
 			go sendHeartbeat(connections[conn])
@@ -26,11 +25,12 @@ func heartbeat(otherNodes nodes, myNodeID string) {
 }
 
 func sendHeartbeat(conn *net.TCPConn) {
+	fmt.Println("sendHeartbeat")
 	_, err := conn.Write([]byte("ThisIsHeartbeat"))
 	checkError(err, "Heartbeat")
 }
 
-func establishConn(ns nodes) {
+/* func establishConn(ns nodes) {
 
 	for n := range ns {
 		address := "127.0.0.1:" + strconv.Itoa(ns[n].port)
@@ -43,4 +43,4 @@ func establishConn(ns nodes) {
 		_, err = conn.Write([]byte("First Message from heartbeat"))
 		connections = append(connections, conn)
 	}
-}
+} */
