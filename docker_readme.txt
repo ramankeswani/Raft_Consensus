@@ -9,3 +9,8 @@ docker run -p 4000:4000 repo // Run
 
 docker rmi Image Image // Remove Image
 docker system prune -a
+
+
+
+ pkill -HUP 1714
+ ps aux | grep main\

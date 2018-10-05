@@ -7,26 +7,27 @@ import (
 )
 
 // Initialise Heartbeat
-func heartbeat(otherNodes nodes, myNodeID string, connections []*net.TCPConn) {
+func heartbeat(otherNodes nodes, myNodeID string, connMap map[string]connection) {
 
 	//time.Sleep(3 * time.Second)
 
 	fmt.Println("Heartbeat Starts")
 
 	for {
-		break
+		// For testing heartbeat failure only
+		//break
 		time.Sleep(time.Duration(heartbeatInterval) * time.Millisecond)
-		for conn := range connections {
+		for _, conn := range connMap {
 			// Send heartbeat after interval time
-			go sendHeartbeat(connections[conn])
+			go sendHeartbeat(conn.conn, myNodeID)
 		}
 		fmt.Println("Heartbeat Ends")
 	}
 }
 
-func sendHeartbeat(conn *net.TCPConn) {
+func sendHeartbeat(conn *net.TCPConn, myNodeID string) {
 	fmt.Println("sendHeartbeat")
-	_, err := conn.Write([]byte("ThisIsHeartbeat"))
+	_, err := conn.Write([]byte("ThisIsHeartbeat" + " " + myNodeID + "\n"))
 	checkError(err, "Heartbeat")
 }
 
