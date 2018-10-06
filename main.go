@@ -24,8 +24,10 @@ var connMap map[string]connection
 
 var chanConnMap chan map[string]connection
 
-// Entry Point for the Application
-// Usage go run port nodeID
+/*
+Entry Point for the Application
+Usage: go run port nodeID
+*/
 func main() {
 
 	if len(os.Args) != 3 {
@@ -39,21 +41,17 @@ func main() {
 	chanStartHBCheck = make(chan string)
 	connMap := make(map[string]connection)
 	chanConnMap = make(chan map[string]connection)
-
 	tableCluster(nodeID)
 	fmt.Println("I AM: ", nodeID)
 	fmt.Println("------------------------------")
-
 	c := make(chan int)
+
 	// Starting Server
-	go server(myPort, c, nodeID)
+	go server(myPort, nodeID)
 
 	ns := getNodesFromDB()
 	populateOtherNodes(ns)
-
-	// Send Intitial Connection Requests to Other Nodes
 	go sendConnectionRequest(otherNodes)
-
 	for range otherNodes {
 		conn := <-connChan
 		fmt.Println("connection channel received", conn)
@@ -66,12 +64,18 @@ func main() {
 	}
 	chanConnMap <- connMap
 	chanStartHBCheck <- "start"
+
 	// Blocking to keep the main routine alive forever
 	fmt.Println(<-c)
 	fmt.Println("Program ends")
 
 }
 
+/*
+Create TCP sockets with all other nodes in the cluster
+Arguements: Node Objects
+Returns when connection objects are established
+*/
 func sendConnectionRequest(ns nodes) {
 
 	// Sleep till other nodes are ready

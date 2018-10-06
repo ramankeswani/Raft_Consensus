@@ -6,25 +6,30 @@ import (
 	"time"
 )
 
-// Initialise Heartbeat
+/*
+Invoked only by leader to initialize and send heartbeat messages
+Arguments: Other Nodes in Cluster, Self NodeID, hashmap of connection objects
+Returns when node crashes or new leader is elected
+*/
 func heartbeat(otherNodes nodes, myNodeID string, connMap map[string]connection) {
 
-	//time.Sleep(3 * time.Second)
-
 	fmt.Println("Heartbeat Starts")
-
 	for {
 		// For testing heartbeat failure only
-		//break
+		break
 		time.Sleep(time.Duration(heartbeatInterval) * time.Millisecond)
 		for _, conn := range connMap {
-			// Send heartbeat after interval time
 			go sendHeartbeat(conn.conn, myNodeID)
 		}
 		fmt.Println("Heartbeat Ends")
 	}
 }
 
+/*
+Sends out actual heartbeat message
+Arguments: TCP Socket Connection Object, Self/Leader NodeID
+Returns ASAP after sending heartbeat
+*/
 func sendHeartbeat(conn *net.TCPConn, myNodeID string) {
 	fmt.Println("sendHeartbeat")
 	_, err := conn.Write([]byte("ThisIsHeartbeat" + " " + myNodeID + "\n"))
