@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -20,8 +19,8 @@ type connection struct {
 	conn   *net.TCPConn
 }
 
+var totalNodes int
 var connMap map[string]connection
-
 var chanConnMap chan map[string]connection
 
 /*
@@ -47,7 +46,7 @@ func main() {
 	c := make(chan int)
 
 	// Starting Server
-	go server(myPort, nodeID)
+	go server(myPort, nodeID, chanConnMap)
 
 	ns := getNodesFromDB()
 	populateOtherNodes(ns)
@@ -59,10 +58,18 @@ func main() {
 	}
 
 	// TO-DO: Assuming node ALPHA to be the leader.
-	if strings.Compare(nodeID, "ALPHA") == 0 {
-		go heartbeat(otherNodes, nodeID, connMap)
-	}
+	/* if strings.Compare(nodeID, "ALPHA") == 0 {
+		s := state{
+			currentTerm: 1,
+		}
+		go heartbeat(otherNodes, nodeID, connMap, s)
+	} */
+
+	// Once for server, once for server helper and once for client
 	chanConnMap <- connMap
+	chanConnMap <- connMap
+	chanConnMap <- connMap
+	totalNodes = len(connMap) + 1
 	chanStartHBCheck <- "start"
 
 	// Blocking to keep the main routine alive forever

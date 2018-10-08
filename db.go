@@ -14,6 +14,12 @@ type node struct {
 	port    int
 }
 
+type state struct {
+	currentTerm int
+	votedFor    string
+	leader      string
+}
+
 type nodes []node
 
 var insertStateStmt *sql.Stmt
@@ -38,6 +44,9 @@ func tableCluster(nodeID string) {
 	_, err = insertStatement.Exec("ALPHA", "127.0.0.1", 5000)
 	_, err = insertStatement.Exec("BETA", "127.0.0.1", 6000)
 	_, err = insertStatement.Exec("GAMMA", "127.0.0.1", 7000)
+	/* _, err = insertStatement.Exec("NODE4", "127.0.0.1", 7001)
+	_, err = insertStatement.Exec("NODE5", "127.0.0.1", 7002) */
+
 	checkErr(err)
 
 	fmt.Println("-----------------------------------------")
@@ -54,21 +63,21 @@ func tableState() {
 	fmt.Println("dbname:", dbName)
 	db, err := sql.Open("sqlite3", dbName)
 
-	createStatement, err := db.Prepare("CREATE TABLE state (currentTerm integer, votedFor text)")
+	createStatement, err := db.Prepare("CREATE TABLE state (currentTerm integer, votedFor text, leader text)")
 	createStatement.Exec()
 	checkErr(err)
 
-	insertStateStmt, err = db.Prepare("INSERT INTO state(currentTerm, votedFor) values(?,?)")
-	insertStateStmt.Exec(0, "")
+	insertStateStmt, err = db.Prepare("INSERT INTO state(currentTerm, votedFor, leader) values(?,?,?)")
+	insertStateStmt.Exec(0, "", "")
 
 	delStateStmt, err = db.Prepare("DELETE FROM state")
 	checkErr(err)
 }
 
-func insertTableState(currentTerm int, votedFor string) (res bool) {
+func insertTableState(currentTerm int, votedFor string, leader string) (res bool) {
 
 	delStateStmt.Exec()
-	_, err := insertStateStmt.Exec(currentTerm, votedFor)
+	_, err := insertStateStmt.Exec(currentTerm, votedFor, leader)
 	checkErr(err)
 
 	if err != nil {
@@ -77,25 +86,36 @@ func insertTableState(currentTerm int, votedFor string) (res bool) {
 	return true
 }
 
-func getState() (currentTerm int, votedFor string) {
+func getState() state {
 	var currTerm int
-	var voteFor string
+	var votedFor string
+	var leader string
+	s := state{
+		currentTerm: -1,
+		votedFor:    "",
+		leader:      "",
+	}
 	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
-		return -1, ""
+		return s
 	}
 	row, err := db.Query("SELECT * FROM state order by currentTerm DESC limit 1")
 	if err != nil {
-		return -2, ""
+		return s
 	}
 	for row.Next() {
-		err = row.Scan(&currTerm, &voteFor)
+		err = row.Scan(&currTerm, &votedFor, &leader)
 	}
 	if err != nil {
-		return -3, ""
+		return s
+	}
+	s = state{
+		currentTerm: currTerm,
+		votedFor:    votedFor,
+		leader:      leader,
 	}
 	row.Close()
-	return currTerm, voteFor
+	return s
 }
 
 func getNodesFromDB() nodes {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -11,15 +12,21 @@ Invoked only by leader to initialize and send heartbeat messages
 Arguments: Other Nodes in Cluster, Self NodeID, hashmap of connection objects
 Returns when node crashes or new leader is elected
 */
-func heartbeat(otherNodes nodes, myNodeID string, connMap map[string]connection) {
+var i int
 
-	fmt.Println("Heartbeat Starts")
+func heartbeat(otherNodes nodes, myNodeID string, connMap map[string]connection, s state) {
+
+	i++
+	fmt.Println("Heartbeat Starts i:", i)
 	for {
 		// For testing heartbeat failure only
-		break
+		/* if i == 1 && strings.Compare("ALPHA", myNodeID) == 0 {
+			break
+		} */
 		time.Sleep(time.Duration(heartbeatInterval) * time.Millisecond)
+		fmt.Printf("len: %d lenmap: %d \n", len(otherNodes), len(connMap))
 		for _, conn := range connMap {
-			go sendHeartbeat(conn.conn, myNodeID)
+			go sendHeartbeat(conn.conn, myNodeID, s.currentTerm)
 		}
 		fmt.Println("Heartbeat Ends")
 	}
@@ -30,9 +37,9 @@ Sends out actual heartbeat message
 Arguments: TCP Socket Connection Object, Self/Leader NodeID
 Returns ASAP after sending heartbeat
 */
-func sendHeartbeat(conn *net.TCPConn, myNodeID string) {
+func sendHeartbeat(conn *net.TCPConn, myNodeID string, term int) {
 	fmt.Println("sendHeartbeat")
-	_, err := conn.Write([]byte("ThisIsHeartbeat" + " " + myNodeID + "\n"))
+	_, err := conn.Write([]byte("ThisIsHeartbeat" + " " + myNodeID + " " + strconv.Itoa(term) + "\n"))
 	checkError(err, "Heartbeat")
 }
 

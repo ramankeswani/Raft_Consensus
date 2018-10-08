@@ -13,18 +13,16 @@ import (
 var timer *time.Timer
 var source rand.Source
 var r *rand.Rand
-var votes = 0
-var totalNodes int
 var myNodeID string
+var connMapServer map[string]connection
 
 /*
 Server Modules Invoked from Main on load
 Arguements: Server Port, Self Node ID
 Returns/Exits on Node Failure Only
 */
-func server(myPort int, nodeID string) {
+func server(myPort int, nodeID string, chanConnMap chan map[string]connection) {
 
-	totalNodes = len(connMap) + 1
 	source = rand.NewSource(time.Now().UnixNano())
 	r = rand.New(source)
 	myNodeID = nodeID
@@ -34,6 +32,9 @@ func server(myPort int, nodeID string) {
 	checkError(err, "server")
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	checkError(err, "server")
+
+	go initConnectionMapServer(chanConnMap)
+	go initConnectionMapServerHelper(chanConnMap)
 
 	// Routine to track HeartBeat Timeout
 	go heartbeatChecker()
@@ -77,15 +78,17 @@ Initializes timer for heartbeat timeout
 func heartbeatChecker() {
 
 	// Waits for commmand from main routine till all connections/nodes are ready. (On load only)
-	fmt.Println(<-chanStartHBCheck)
+	fmt.Println("Heartbeat channel", <-chanStartHBCheck)
 	fmt.Println("heartbeat checker starts")
 	timeOut := heartbeatTimeOut + r.Intn(3*heartbeatTimeOut) + r.Intn(3*heartbeatTimeOut)
 	fmt.Println("timeout:", timeOut)
+	fmt.Println("time Now:", time.Now())
 	timer = time.NewTimer(time.Duration(timeOut) * time.Millisecond)
 	<-timer.C
 	fmt.Println("-------------------------------------")
 	fmt.Println("NO HEARTBEAT RECIEVED WITHIN TIMEOUT")
 	fmt.Println("-------------------------------------")
+	fmt.Println("time Now:", time.Now())
 	go initiateElection(nodeID)
 }
 
@@ -96,6 +99,9 @@ func updateHBFlag(data string, timer *time.Timer) {
 	dataSlice := strings.Fields(data)
 	if strings.Compare(dataSlice[0], "ThisIsHeartbeat") == 0 {
 		resetTimer()
+		s := getState()
+		t, _ := strconv.Atoi(dataSlice[2])
+		insertTableState(t, s.votedFor, dataSlice[1])
 	}
 }
 
@@ -106,7 +112,16 @@ func resetTimer() {
 	fmt.Println("Reset Timeout")
 	timeOut := heartbeatTimeOut + r.Intn(3*heartbeatTimeOut) + r.Intn(3*heartbeatTimeOut)
 	fmt.Println(timeOut)
+	fmt.Println("time Now:", time.Now())
+	timer.Stop()
 	timer.Reset(time.Duration(timeOut) * time.Millisecond)
+}
+
+/*
+Initialize connection map for server
+*/
+func initConnectionMapServer(chanConnMap chan map[string]connection) {
+	connMapServer = <-chanConnMap
 }
 
 /*
