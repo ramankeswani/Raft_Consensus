@@ -8,6 +8,7 @@ import (
 )
 
 var candidate bool
+var leader bool
 var votes int
 var connMapServerHelper map[string]connection
 
@@ -40,7 +41,7 @@ func processRequest(message string) {
 	fmt.Println(data)
 	if data[1] == RequestVoteRPC {
 		handleRequestVoteRPC(data, data[0])
-	} else if data[1] == RequestVoteRPCReply {
+	} else if data[1] == RequestVoteRPCReply && candidate {
 		countVotes(data)
 	}
 	fmt.Println("process Request Ends")
@@ -58,6 +59,7 @@ func countVotes(data []string) {
 		if float32(float32(votes)/float32(totalNodes)) > 0.5 {
 			s := getState()
 			insertTableState(s.currentTerm, s.votedFor, myNodeID)
+			leader = true
 			heartbeat(otherNodes, myNodeID, connMapServerHelper, s)
 			candidate = false
 			votes = 0
@@ -79,6 +81,8 @@ func handleRequestVoteRPC(data []string, remoteNodeID string) {
 	if candidateTerm > s.currentTerm {
 		message = myNodeID + " " + RequestVoteRPCReply + " " + "YES\n"
 		res := insertTableState(candidateTerm, remoteNodeID, "")
+		leader = false
+		candidate = false
 		fmt.Println("res insert status: ", res)
 	} else {
 		message = myNodeID + " " + RequestVoteRPCReply + " " + "NO" + " " + strconv.Itoa(s.currentTerm) + "\n"

@@ -23,6 +23,9 @@ func heartbeat(otherNodes nodes, myNodeID string, connMap map[string]connection,
 		/* if i == 1 && strings.Compare("ALPHA", myNodeID) == 0 {
 			break
 		} */
+		if !leader {
+			return
+		}
 		time.Sleep(time.Duration(heartbeatInterval) * time.Millisecond)
 		fmt.Printf("len: %d lenmap: %d \n", len(otherNodes), len(connMap))
 		for _, conn := range connMap {
