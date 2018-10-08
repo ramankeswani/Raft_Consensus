@@ -18,12 +18,15 @@ type state struct {
 	currentTerm int
 	votedFor    string
 	leader      string
+	commitIndex int
 }
 
 type nodes []node
 
 var insertStateStmt *sql.Stmt
 var delStateStmt *sql.Stmt
+var insertLogStmt *sql.Stmt
+var updateLogStmt *sql.Stmt
 var dbName string
 
 func tableCluster(nodeID string) {
@@ -68,10 +71,12 @@ func tableState() {
 	checkErr(err)
 
 	insertStateStmt, err = db.Prepare("INSERT INTO state(currentTerm, votedFor, leader) values(?,?,?)")
-	insertStateStmt.Exec(0, "")
+	insertStateStmt.Exec(0, "", "", 0)
 
 	delStateStmt, err = db.Prepare("DELETE FROM state")
 	checkErr(err)
+
+	tableLog()
 }
 
 func insertTableState(currentTerm int, votedFor string, leader string) (res bool) {
@@ -150,8 +155,41 @@ func getNodesFromDB() nodes {
 
 }
 
+func tableLog() {
+	db, err := sql.Open("sqlite3", dbName)
+
+	createStatementLog, err := db.Prepare("CREATE TABLE log (logIndex integer PRIMARY KEY AUTOINCREMENT, term integer, command text, votes integer)")
+	createStatementLog.Exec()
+	checkErr(err)
+
+	insertLogStmt, err = db.Prepare("INSERT INTO log(term, command, votes) values(?,?,?)")
+	checkErr(err)
+	updateLogStmt, err = db.Prepare("UPDATE log SET votes=? where logIndex=?")
+	checkErr(err)
+}
+
 func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func insertLogTable(index int, term int, command string, votes int) (result bool) {
+	_, err := insertLogStmt.Exec(index, term, command, votes)
+	checkErr(err)
+
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func updateLogTable(index int, votes int) (result bool) {
+	_, err := updateLogStmt.Exec(index, votes)
+	checkErr(err)
+
+	if err != nil {
+		return false
+	}
+	return true
 }

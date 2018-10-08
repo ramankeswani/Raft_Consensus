@@ -70,6 +70,7 @@ func main() {
 	chanConnMap <- connMap
 	chanConnMap <- connMap
 	totalNodes = len(connMap) + 1
+	go userInput(connMap)
 	chanStartHBCheck <- "start"
 
 	// Blocking to keep the main routine alive forever

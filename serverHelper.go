@@ -43,6 +43,8 @@ func processRequest(message string) {
 		handleRequestVoteRPC(data, data[0])
 	} else if data[1] == RequestVoteRPCReply && candidate {
 		countVotes(data)
+	} else if data[1] == AppendEntryFromClient {
+		appendEntryInit()
 	}
 	fmt.Println("process Request Ends")
 }

@@ -105,6 +105,7 @@ func updateHBFlag(data string, timer *time.Timer) {
 		resetTimer()
 		s := getState()
 		t, _ := strconv.Atoi(dataSlice[2])
+		fmt.Println("leader:", dataSlice[1])
 		insertTableState(t, s.votedFor, dataSlice[1])
 	}
 }

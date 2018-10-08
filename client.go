@@ -45,7 +45,7 @@ Arguments: message to be passed, and TCP socket connection
 Invoked for all outgoing messages
 */
 func sendMessage(message string, remoteNodeID string) {
-	fmt.Println("Client sendMessage Starts:")
+	fmt.Println("Client sendMessage Starts:", remoteNodeID)
 	c := cMap[remoteNodeID]
 	_, err := c.conn.Write([]byte(message))
 	checkError(err, "sendMessage")
