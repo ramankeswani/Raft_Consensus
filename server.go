@@ -63,7 +63,11 @@ func handleRequests(conn net.Conn) {
 	for {
 		fmt.Println("Server waiting for message")
 		data, err := r.ReadString('\n')
-		checkError(err, "handleRequests")
+		if !checkError(err, "handleRequests") {
+			conn.Close()
+			totalNodes--
+			return
+		}
 
 		// Reset Timer if received message was a heartbeat
 		go updateHBFlag(data, timer)

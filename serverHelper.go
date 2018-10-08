@@ -76,7 +76,7 @@ func handleRequestVoteRPC(data []string, remoteNodeID string) {
 	s := getState()
 	var message string
 	fmt.Println("From DB: myTerm:", s.currentTerm, " votedFor: ", s.votedFor)
-	if s.votedFor == "" && candidateTerm > s.currentTerm {
+	if candidateTerm > s.currentTerm {
 		message = myNodeID + " " + RequestVoteRPCReply + " " + "YES\n"
 		res := insertTableState(candidateTerm, remoteNodeID, "")
 		fmt.Println("res insert status: ", res)
@@ -85,7 +85,7 @@ func handleRequestVoteRPC(data []string, remoteNodeID string) {
 	}
 	fmt.Println("handleRequestVoteRPC:", message)
 	go sendMessage(message, remoteNodeID)
-	//go resetTimer()
+	go resetTimer()
 	fmt.Println("handleRequestVoteRPC ends")
 }
 

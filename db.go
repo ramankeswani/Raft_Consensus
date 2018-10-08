@@ -44,8 +44,8 @@ func tableCluster(nodeID string) {
 	_, err = insertStatement.Exec("ALPHA", "127.0.0.1", 5000)
 	_, err = insertStatement.Exec("BETA", "127.0.0.1", 6000)
 	_, err = insertStatement.Exec("GAMMA", "127.0.0.1", 7000)
-	/* _, err = insertStatement.Exec("NODE4", "127.0.0.1", 7001)
-	_, err = insertStatement.Exec("NODE5", "127.0.0.1", 7002) */
+	_, err = insertStatement.Exec("NODE4", "127.0.0.1", 7001)
+	_, err = insertStatement.Exec("NODE5", "127.0.0.1", 7002)
 
 	checkErr(err)
 
@@ -68,7 +68,7 @@ func tableState() {
 	checkErr(err)
 
 	insertStateStmt, err = db.Prepare("INSERT INTO state(currentTerm, votedFor, leader) values(?,?,?)")
-	insertStateStmt.Exec(0, "", "")
+	insertStateStmt.Exec(0, "")
 
 	delStateStmt, err = db.Prepare("DELETE FROM state")
 	checkErr(err)

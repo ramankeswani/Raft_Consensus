@@ -98,11 +98,12 @@ func sendConnectionRequest(ns nodes) {
 
 }
 
-func checkError(err error, src string) {
+func checkError(err error, src string) (status bool) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s Fatal error: %s \n", src, err.Error())
-		os.Exit(1)
+		return false
 	}
+	return true
 }
 
 func populateOtherNodes(ns nodes) {
