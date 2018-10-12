@@ -10,7 +10,7 @@ import (
 var candidate bool
 var leader bool
 var votes int
-var connMapServerHelper map[string]connection
+var nextIndex map[string]int
 
 /*
 Sends RequestVoteRPC to all other Nodes
@@ -22,7 +22,8 @@ func initiateElection(myNodeID string) {
 	candidate = true
 	votes = 0
 	s := getState()
-	insertTableState(s.currentTerm+1, myNodeID, "")
+	term = s.currentTerm + 1
+	insertTableState(term, myNodeID, "", 0)
 	message := myNodeID + " " + RequestVoteRPC + " " + strconv.Itoa(s.currentTerm+1) + "\n"
 	fmt.Println("election messsage:", message)
 	for rID := range otherNodes {
@@ -44,7 +45,9 @@ func processRequest(message string) {
 	} else if data[1] == RequestVoteRPCReply && candidate {
 		countVotes(data)
 	} else if data[1] == AppendEntryFromClient {
-		appendEntryInit()
+		appendEntryInit(data[2])
+	} else if data[1] == AppendEntryRPC {
+		handleAppendEntryRPCFromLeader(message)
 	}
 	fmt.Println("process Request Ends")
 }
@@ -59,12 +62,15 @@ func countVotes(data []string) {
 		fmt.Printf("Votes: %d totalNodes:  %d \n", votes, totalNodes)
 		fmt.Printf("votes/totalNodes: %f \n", float32(float32(votes)/float32(totalNodes)))
 		if float32(float32(votes)/float32(totalNodes)) > 0.5 {
+			killTimer()
 			s := getState()
-			insertTableState(s.currentTerm, s.votedFor, myNodeID)
+			insertTableState(s.currentTerm, s.votedFor, myNodeID, 0)
 			leader = true
-			heartbeat(otherNodes, myNodeID, connMapServerHelper, s)
+			term = s.currentTerm
+			heartbeat(otherNodes, myNodeID, connMap, s)
 			candidate = false
 			votes = 0
+			nextIndex = make(map[string]int)
 		}
 	}
 	fmt.Println("Count Votes END")
@@ -82,9 +88,10 @@ func handleRequestVoteRPC(data []string, remoteNodeID string) {
 	fmt.Println("From DB: myTerm:", s.currentTerm, " votedFor: ", s.votedFor)
 	if candidateTerm > s.currentTerm {
 		message = myNodeID + " " + RequestVoteRPCReply + " " + "YES\n"
-		res := insertTableState(candidateTerm, remoteNodeID, "")
+		res := insertTableState(candidateTerm, remoteNodeID, "", 0)
 		leader = false
 		candidate = false
+		term = candidateTerm
 		fmt.Println("res insert status: ", res)
 	} else {
 		message = myNodeID + " " + RequestVoteRPCReply + " " + "NO" + " " + strconv.Itoa(s.currentTerm) + "\n"
@@ -93,11 +100,4 @@ func handleRequestVoteRPC(data []string, remoteNodeID string) {
 	go sendMessage(message, remoteNodeID)
 	go resetTimer()
 	fmt.Println("handleRequestVoteRPC ends")
-}
-
-/*
-Initialize connection map for server helper
-*/
-func initConnectionMapServerHelper(chanConnMap chan map[string]connection) {
-	connMapServerHelper = <-chanConnMap
 }

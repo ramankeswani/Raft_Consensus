@@ -14,14 +14,14 @@ var timer *time.Timer
 var source rand.Source
 var r *rand.Rand
 var myNodeID string
-var connMapServer map[string]connection
+var term int
 
 /*
 Server Modules Invoked from Main on load
 Arguements: Server Port, Self Node ID
 Returns/Exits on Node Failure Only
 */
-func server(myPort int, nodeID string, chanConnMap chan map[string]connection) {
+func server(myPort int, nodeID string) {
 
 	source = rand.NewSource(time.Now().UnixNano())
 	r = rand.New(source)
@@ -32,9 +32,6 @@ func server(myPort int, nodeID string, chanConnMap chan map[string]connection) {
 	checkError(err, "server")
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	checkError(err, "server")
-
-	go initConnectionMapServer(chanConnMap)
-	go initConnectionMapServerHelper(chanConnMap)
 
 	// Routine to track HeartBeat Timeout
 	go heartbeatChecker()
@@ -84,7 +81,12 @@ func heartbeatChecker() {
 	// Waits for commmand from main routine till all connections/nodes are ready. (On load only)
 	fmt.Println("Heartbeat channel", <-chanStartHBCheck)
 	fmt.Println("heartbeat checker starts")
-	timeOut := heartbeatTimeOut + r.Intn(3*heartbeatTimeOut) + r.Intn(3*heartbeatTimeOut)
+	heartbeatCheckerElection()
+}
+
+func heartbeatCheckerElection() {
+	fmt.Println("heartbeat checker starts")
+	timeOut := heartbeatTimeOut + r.Intn(2*heartbeatTimeOut)
 	fmt.Println("timeout:", timeOut)
 	fmt.Println("time Now:", time.Now())
 	timer = time.NewTimer(time.Duration(timeOut) * time.Millisecond)
@@ -94,6 +96,7 @@ func heartbeatChecker() {
 	fmt.Println("-------------------------------------")
 	fmt.Println("time Now:", time.Now())
 	go initiateElection(nodeID)
+	heartbeatCheckerElection()
 }
 
 /*
@@ -106,7 +109,7 @@ func updateHBFlag(data string, timer *time.Timer) {
 		s := getState()
 		t, _ := strconv.Atoi(dataSlice[2])
 		fmt.Println("leader:", dataSlice[1])
-		insertTableState(t, s.votedFor, dataSlice[1])
+		insertTableState(t, s.votedFor, dataSlice[1], 0)
 	}
 }
 
@@ -115,7 +118,7 @@ Reset the timer when a heartbeat is received
 */
 func resetTimer() {
 	fmt.Println("Reset Timeout")
-	timeOut := heartbeatTimeOut + r.Intn(3*heartbeatTimeOut) + r.Intn(3*heartbeatTimeOut)
+	timeOut := heartbeatTimeOut + r.Intn(2*heartbeatTimeOut)
 	fmt.Println(timeOut)
 	fmt.Println("time Now:", time.Now())
 	timer.Stop()
@@ -123,10 +126,11 @@ func resetTimer() {
 }
 
 /*
-Initialize connection map for server
+Kills the timer once node wins the election
 */
-func initConnectionMapServer(chanConnMap chan map[string]connection) {
-	connMapServer = <-chanConnMap
+func killTimer() {
+	fmt.Println("Kill Timer")
+	timer.Stop()
 }
 
 /*

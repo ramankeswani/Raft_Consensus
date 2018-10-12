@@ -8,8 +8,9 @@ import (
 )
 
 func userInput(connMap map[string]connection) {
+	fmt.Println("User Input Starts")
 	for key, value := range connMap {
-		fmt.Println("key: " + key + " value: " + value.nodeID)
+		fmt.Println("User Input key: " + key + " value: " + value.nodeID)
 	}
 	reader := bufio.NewReader(os.Stdin)
 	for {

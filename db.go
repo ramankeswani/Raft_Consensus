@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -21,6 +23,13 @@ type state struct {
 	commitIndex int
 }
 
+type log struct {
+	logIndex int
+	term     int
+	command  string
+	votes    int
+}
+
 type nodes []node
 
 var insertStateStmt *sql.Stmt
@@ -28,6 +37,7 @@ var delStateStmt *sql.Stmt
 var insertLogStmt *sql.Stmt
 var updateLogStmt *sql.Stmt
 var dbName string
+var mutex = &sync.Mutex{}
 
 func tableCluster(nodeID string) {
 
@@ -66,11 +76,11 @@ func tableState() {
 	fmt.Println("dbname:", dbName)
 	db, err := sql.Open("sqlite3", dbName)
 
-	createStatement, err := db.Prepare("CREATE TABLE state (currentTerm integer, votedFor text, leader text)")
+	createStatement, err := db.Prepare("CREATE TABLE state (currentTerm integer, votedFor text, leader text, commitIndex integer)")
 	createStatement.Exec()
 	checkErr(err)
 
-	insertStateStmt, err = db.Prepare("INSERT INTO state(currentTerm, votedFor, leader) values(?,?,?)")
+	insertStateStmt, err = db.Prepare("INSERT INTO state(currentTerm, votedFor, leader, commitIndex) values(?,?,?,?)")
 	insertStateStmt.Exec(0, "", "", 0)
 
 	delStateStmt, err = db.Prepare("DELETE FROM state")
@@ -79,12 +89,12 @@ func tableState() {
 	tableLog()
 }
 
-func insertTableState(currentTerm int, votedFor string, leader string) (res bool) {
-
+func insertTableState(currentTerm int, votedFor string, leader string, commitIndex int) (res bool) {
+	mutex.Lock()
 	delStateStmt.Exec()
-	_, err := insertStateStmt.Exec(currentTerm, votedFor, leader)
+	_, err := insertStateStmt.Exec(currentTerm, votedFor, leader, commitIndex)
 	checkErr(err)
-
+	mutex.Unlock()
 	if err != nil {
 		return false
 	}
@@ -92,13 +102,16 @@ func insertTableState(currentTerm int, votedFor string, leader string) (res bool
 }
 
 func getState() state {
+	mutex.Lock()
 	var currTerm int
 	var votedFor string
 	var leader string
+	var commIndex int
 	s := state{
 		currentTerm: -1,
 		votedFor:    "",
 		leader:      "",
+		commitIndex: -1,
 	}
 	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
@@ -109,7 +122,7 @@ func getState() state {
 		return s
 	}
 	for row.Next() {
-		err = row.Scan(&currTerm, &votedFor, &leader)
+		err = row.Scan(&currTerm, &votedFor, &leader, &commIndex)
 	}
 	if err != nil {
 		return s
@@ -118,8 +131,10 @@ func getState() state {
 		currentTerm: currTerm,
 		votedFor:    votedFor,
 		leader:      leader,
+		commitIndex: commIndex,
 	}
 	row.Close()
+	mutex.Unlock()
 	return s
 }
 
@@ -174,14 +189,16 @@ func checkErr(err error) {
 	}
 }
 
-func insertLogTable(index int, term int, command string, votes int) (result bool) {
-	_, err := insertLogStmt.Exec(index, term, command, votes)
+func insertLogTable(term int, command string, votes int) (prevLogIndex int, prevLogTerm int) {
+	res, err := insertLogStmt.Exec(term, command, votes)
 	checkErr(err)
 
 	if err != nil {
-		return false
+		return -1, -1
 	}
-	return true
+	id, _ := res.LastInsertId()
+	log := getLogTable(int(id) - 1)
+	return int(id) - 1, log.term
 }
 
 func updateLogTable(index int, votes int) (result bool) {
@@ -192,4 +209,27 @@ func updateLogTable(index int, votes int) (result bool) {
 		return false
 	}
 	return true
+}
+
+func getLogTable(logIndex int) (l log) {
+	db, err := sql.Open("sqlite3", dbName)
+	rows, err := db.Query("SELECT * FROM log where logIndex = " + strconv.Itoa(logIndex))
+	var lIndex int
+	var t int
+	var command string
+	var v int
+	l = log{
+		logIndex: -1,
+	}
+	for rows.Next() {
+		err = rows.Scan(&lIndex, &t, &command, &t, &v)
+		checkErr(err)
+		l = log{
+			logIndex: lIndex,
+			term:     t,
+			command:  command,
+			votes:    v,
+		}
+	}
+	return l
 }

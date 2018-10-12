@@ -27,7 +27,6 @@ func heartbeat(otherNodes nodes, myNodeID string, connMap map[string]connection,
 			return
 		}
 		time.Sleep(time.Duration(heartbeatInterval) * time.Millisecond)
-		fmt.Printf("len: %d lenmap: %d \n", len(otherNodes), len(connMap))
 		for _, conn := range connMap {
 			go sendHeartbeat(conn.conn, myNodeID, s.currentTerm)
 		}
@@ -41,7 +40,6 @@ Arguments: TCP Socket Connection Object, Self/Leader NodeID
 Returns ASAP after sending heartbeat
 */
 func sendHeartbeat(conn *net.TCPConn, myNodeID string, term int) {
-	fmt.Println("sendHeartbeat")
 	_, err := conn.Write([]byte("ThisIsHeartbeat" + " " + myNodeID + " " + strconv.Itoa(term) + "\n"))
 	checkError(err, "Heartbeat")
 }

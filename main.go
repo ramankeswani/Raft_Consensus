@@ -21,11 +21,10 @@ type connection struct {
 
 var totalNodes int
 var connMap map[string]connection
-var chanConnMap chan map[string]connection
 
 /*
 Entry Point for the Application
-Usage: go run port nodeID
+Usage: ./main port nodeID
 */
 func main() {
 
@@ -38,15 +37,14 @@ func main() {
 	nodeID = os.Args[2]
 	connChan = make(chan connection)
 	chanStartHBCheck = make(chan string)
-	connMap := make(map[string]connection)
-	chanConnMap = make(chan map[string]connection)
+	connMap = make(map[string]connection)
 	tableCluster(nodeID)
 	fmt.Println("I AM: ", nodeID)
 	fmt.Println("------------------------------")
 	c := make(chan int)
 
 	// Starting Server
-	go server(myPort, nodeID, chanConnMap)
+	go server(myPort, nodeID)
 
 	ns := getNodesFromDB()
 	populateOtherNodes(ns)
@@ -65,10 +63,6 @@ func main() {
 		go heartbeat(otherNodes, nodeID, connMap, s)
 	} */
 
-	// Once for server, once for server helper and once for client
-	chanConnMap <- connMap
-	chanConnMap <- connMap
-	chanConnMap <- connMap
 	totalNodes = len(connMap) + 1
 	go userInput(connMap)
 	chanStartHBCheck <- "start"
@@ -92,7 +86,7 @@ func sendConnectionRequest(ns nodes) {
 	fmt.Println("\nSendConnectionRequest Starts")
 	for n := range ns {
 		fmt.Println(ns[n])
-		go client(ns[n].port, myPort, connChan, ns[n].nodeID, chanConnMap)
+		go client(ns[n].port, myPort, connChan, ns[n].nodeID)
 	}
 	fmt.Println("SendConnectionRequest Ends")
 	fmt.Println("------------------------------")
