@@ -38,6 +38,7 @@ func server(myPort int, nodeID string) {
 
 	for {
 		fmt.Println("Server Ready to Accept")
+		logFile("append", "Server Ready To Accept")
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Error at server while accepting")
@@ -68,6 +69,7 @@ func handleRequests(conn net.Conn) {
 
 		// Reset Timer if received message was a heartbeat
 		go updateHBFlag(data, timer)
+		logFile("append", data+"\n")
 		fmt.Println("Received:", data)
 		go processRequest(data)
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -9,20 +8,21 @@ import (
 Creates Append Entry RPC Request and sends the request to all Clients
 */
 func appendEntryInit(command string) {
-	fmt.Println("Append Entry Starts Map len:", len(connMap))
+	logFile("append", "Append Entry Starts Map len:"+strconv.Itoa(len(connMap))+"\n")
 	prevLogIndex, prevLogTerm := insertLogTable(term, command, 1)
-	fmt.Println("id:", prevLogIndex)
+	logFile("append", "id: "+strconv.Itoa(prevLogIndex))
 	s := getState()
 	message := myNodeID + " " + AppendEntryRPC + " " + strconv.Itoa(s.currentTerm) + " " + strconv.Itoa(prevLogIndex) +
-		" " + strconv.Itoa(prevLogTerm) + " " + command + " " + strconv.Itoa(s.commitIndex)
+		" " + strconv.Itoa(prevLogTerm) + " " + command + " " + strconv.Itoa(s.commitIndex) + "\n"
+	logFile("append", message)
 	for node := range otherNodes {
 		chanMap[otherNodes[node].nodeID] <- message
 	}
-	fmt.Println("Append Entry Ends")
+	logFile("append", "Append Entry Init Ends\n")
 }
 
 func handleAppendEntryRPCFromLeader(message string) {
-	fmt.Println("???handle Append Entry RPC from leader starts???")
+	logFile("append", "Append Entry Starts\n")
 
-	fmt.Println("???handle Append Entry RPC from leader starts???")
+	logFile("append", "Append Entry Ends\n")
 }

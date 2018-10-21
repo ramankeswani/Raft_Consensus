@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+var logTag = "append"
 var myPort int
 var nodeID string
 var otherNodes nodes
@@ -37,6 +38,7 @@ func main() {
 
 	myPort, _ = strconv.Atoi(os.Args[1])
 	nodeID = os.Args[2]
+	initLog(nodeID)
 	connChan = make(chan connection)
 	chanStartHBCheck = make(chan string)
 	connMap = make(map[string]connection)
