@@ -86,17 +86,17 @@ func heartbeatChecker() {
 
 func heartbeatCheckerElection() {
 	fmt.Println("heartbeat checker starts")
-	timeOut := heartbeatTimeOut + r.Intn(2*heartbeatTimeOut)
-	fmt.Println("timeout:", timeOut)
-	fmt.Println("time Now:", time.Now())
+	timeOut := 2*heartbeatTimeOut + r.Intn(2*heartbeatTimeOut)
+	//fmt.Println("timeout:", timeOut)
+	//fmt.Println("time Now:", time.Now())
 	timer = time.NewTimer(time.Duration(timeOut) * time.Millisecond)
 	<-timer.C
 	fmt.Println("-------------------------------------")
 	fmt.Println("NO HEARTBEAT RECIEVED WITHIN TIMEOUT")
 	fmt.Println("-------------------------------------")
-	fmt.Println("time Now:", time.Now())
+	//fmt.Println("time Now:", time.Now())
 	go initiateElection(nodeID)
-	heartbeatCheckerElection()
+	go heartbeatCheckerElection()
 }
 
 /*
@@ -118,9 +118,9 @@ Reset the timer when a heartbeat is received
 */
 func resetTimer() {
 	fmt.Println("Reset Timeout")
-	timeOut := heartbeatTimeOut + r.Intn(2*heartbeatTimeOut)
-	fmt.Println(timeOut)
-	fmt.Println("time Now:", time.Now())
+	timeOut := 2*heartbeatTimeOut + r.Intn(2*heartbeatTimeOut)
+	//fmt.Println(timeOut)
+	//fmt.Println("time Now:", time.Now())
 	timer.Stop()
 	timer.Reset(time.Duration(timeOut) * time.Millisecond)
 }

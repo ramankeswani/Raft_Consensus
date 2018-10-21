@@ -15,12 +15,14 @@ func appendEntryInit(command string) {
 	s := getState()
 	message := myNodeID + " " + AppendEntryRPC + " " + strconv.Itoa(s.currentTerm) + " " + strconv.Itoa(prevLogIndex) +
 		" " + strconv.Itoa(prevLogTerm) + " " + command + " " + strconv.Itoa(s.commitIndex)
-	sendMessageToAll(message)
+	for node := range otherNodes {
+		chanMap[otherNodes[node].nodeID] <- message
+	}
 	fmt.Println("Append Entry Ends")
 }
 
 func handleAppendEntryRPCFromLeader(message string) {
-	fmt.Println("handle Append Entry RPC from leader starts")
+	fmt.Println("???handle Append Entry RPC from leader starts???")
 
-	fmt.Println("handle Append Entry RPC from leader starts")
+	fmt.Println("???handle Append Entry RPC from leader starts???")
 }

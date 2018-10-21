@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"strconv"
 	"time"
 )
@@ -15,10 +14,9 @@ Returns when node crashes or new leader is elected
 var i int
 
 func heartbeat(otherNodes nodes, myNodeID string, connMap map[string]connection, s state) {
-
 	i++
 	fmt.Println("Heartbeat Starts i:", i)
-	for {
+	for leader {
 		// For testing heartbeat failure only
 		/* if i == 1 && strings.Compare("ALPHA", myNodeID) == 0 {
 			break
@@ -27,9 +25,7 @@ func heartbeat(otherNodes nodes, myNodeID string, connMap map[string]connection,
 			return
 		}
 		time.Sleep(time.Duration(heartbeatInterval) * time.Millisecond)
-		for _, conn := range connMap {
-			go sendHeartbeat(conn.conn, myNodeID, s.currentTerm)
-		}
+		go sendHeartbeat(myNodeID, s.currentTerm)
 		fmt.Println("Heartbeat Ends")
 	}
 }
@@ -39,9 +35,11 @@ Sends out actual heartbeat message
 Arguments: TCP Socket Connection Object, Self/Leader NodeID
 Returns ASAP after sending heartbeat
 */
-func sendHeartbeat(conn *net.TCPConn, myNodeID string, term int) {
-	_, err := conn.Write([]byte("ThisIsHeartbeat" + " " + myNodeID + " " + strconv.Itoa(term) + "\n"))
-	checkError(err, "Heartbeat")
+func sendHeartbeat(myNodeID string, term int) {
+	message := "ThisIsHeartbeat" + " " + myNodeID + " " + strconv.Itoa(term) + "\n"
+	for _, c := range chanMap {
+		c <- message
+	}
 }
 
 /* func establishConn(ns nodes) {

@@ -26,8 +26,8 @@ func initiateElection(myNodeID string) {
 	insertTableState(term, myNodeID, "", 0)
 	message := myNodeID + " " + RequestVoteRPC + " " + strconv.Itoa(s.currentTerm+1) + "\n"
 	fmt.Println("election messsage:", message)
-	for rID := range otherNodes {
-		go sendMessage(message, otherNodes[rID].nodeID)
+	for remoteID := range otherNodes {
+		chanMap[otherNodes[remoteID].nodeID] <- message
 	}
 	fmt.Println("initiate Election Ends")
 }
@@ -37,7 +37,7 @@ Scans all incoming messages to find type of message
 Arguments: Message from remote
 */
 func processRequest(message string) {
-	fmt.Println("process Request Starts")
+	//fmt.Println("process Request Starts")
 	data := strings.Fields(message)
 	fmt.Println(data)
 	if data[1] == RequestVoteRPC {
@@ -49,7 +49,7 @@ func processRequest(message string) {
 	} else if data[1] == AppendEntryRPC {
 		handleAppendEntryRPCFromLeader(message)
 	}
-	fmt.Println("process Request Ends")
+	//fmt.Println("process Request Ends")
 }
 
 /*
@@ -67,7 +67,7 @@ func countVotes(data []string) {
 			insertTableState(s.currentTerm, s.votedFor, myNodeID, 0)
 			leader = true
 			term = s.currentTerm
-			heartbeat(otherNodes, myNodeID, connMap, s)
+			go heartbeat(otherNodes, myNodeID, connMap, getState())
 			candidate = false
 			votes = 0
 			nextIndex = make(map[string]int)
@@ -82,6 +82,7 @@ Arguments: Message from remote, remote NodeID
 */
 func handleRequestVoteRPC(data []string, remoteNodeID string) {
 	fmt.Println("handleRequestVoteRPC starts")
+	go resetTimer()
 	candidateTerm, _ := strconv.Atoi(data[2])
 	s := getState()
 	var message string
@@ -97,7 +98,7 @@ func handleRequestVoteRPC(data []string, remoteNodeID string) {
 		message = myNodeID + " " + RequestVoteRPCReply + " " + "NO" + " " + strconv.Itoa(s.currentTerm) + "\n"
 	}
 	fmt.Println("handleRequestVoteRPC:", message)
-	go sendMessage(message, remoteNodeID)
-	go resetTimer()
+	chanMap[remoteNodeID] <- message
+	//go sendMessage(message, remoteNodeID)
 	fmt.Println("handleRequestVoteRPC ends")
 }

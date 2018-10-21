@@ -13,6 +13,8 @@ Arguments: Remote Port, Server Port, Connection Channel (To send back Socket Obj
 Channel to Initialize HashMap of connection Objects
 Returns when Node Crashes Only
 */
+var remoteID string
+
 func client(port int, myPort int, connChan chan connection, remoteNodeID string) {
 
 	if port == 0 {
@@ -20,6 +22,7 @@ func client(port int, myPort int, connChan chan connection, remoteNodeID string)
 		os.Exit(1)
 	}
 
+	remoteID = remoteNodeID
 	address := "127.0.0.1:" + strconv.Itoa(port)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", address)
 	checkError(err, "client")
@@ -34,19 +37,6 @@ func client(port int, myPort int, connChan chan connection, remoteNodeID string)
 	_, err = conn.Write([]byte("First request" + strconv.Itoa(myPort) + "\n"))
 	checkError(err, "client")
 
-}
-
-/*
-Sends the message string to other Node's Server
-Arguments: message to be passed, and remotenodeID
-Invoked for all outgoing messages
-*/
-func sendMessage(message string, remoteNodeID string) {
-	fmt.Println("Client sendMessage Starts:", remoteNodeID)
-	c := connMap[remoteNodeID]
-	_, err := c.conn.Write([]byte(message))
-	checkError(err, "sendMessage")
-	fmt.Println("Client sendMessage Ends")
 }
 
 /*

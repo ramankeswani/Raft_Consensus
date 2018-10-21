@@ -13,6 +13,7 @@ var nodeID string
 var otherNodes nodes
 var connChan chan connection
 var chanStartHBCheck chan string
+var chanMessage chan string
 
 type connection struct {
 	nodeID string
@@ -21,6 +22,7 @@ type connection struct {
 
 var totalNodes int
 var connMap map[string]connection
+var chanMap map[string]chan string
 
 /*
 Entry Point for the Application
@@ -38,6 +40,7 @@ func main() {
 	connChan = make(chan connection)
 	chanStartHBCheck = make(chan string)
 	connMap = make(map[string]connection)
+	chanMap = make(map[string]chan string)
 	tableCluster(nodeID)
 	fmt.Println("I AM: ", nodeID)
 	fmt.Println("------------------------------")
@@ -53,6 +56,9 @@ func main() {
 		conn := <-connChan
 		fmt.Println("connection channel received", conn)
 		connMap[conn.nodeID] = conn
+		chanTemp := make(chan string)
+		chanMap[conn.nodeID] = chanTemp
+		go sendMessage(conn.nodeID)
 	}
 
 	// TO-DO: Assuming node ALPHA to be the leader.
