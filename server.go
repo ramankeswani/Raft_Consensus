@@ -59,7 +59,7 @@ func handleRequests(conn net.Conn) {
 
 	r := bufio.NewReader(conn)
 	for {
-		fmt.Println("Server waiting for message")
+		//fmt.Println("Server waiting for message")
 		data, err := r.ReadString('\n')
 		if !checkError(err, "handleRequests") {
 			conn.Close()
@@ -69,8 +69,8 @@ func handleRequests(conn net.Conn) {
 
 		// Reset Timer if received message was a heartbeat
 		go updateHBFlag(data, timer)
-		logFile("append", data+"\n")
-		fmt.Println("Received:", data)
+		logFile("append", data)
+		//fmt.Println("Received:", data)
 		go processRequest(data)
 	}
 }

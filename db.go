@@ -38,6 +38,8 @@ var insertLogStmt *sql.Stmt
 var updateLogStmt *sql.Stmt
 var dbName string
 var mutex = &sync.Mutex{}
+var mutexLogTable = &sync.Mutex{}
+var logIndex int
 
 func tableCluster(nodeID string) {
 
@@ -196,15 +198,45 @@ func insertLogTable(term int, command string, votes int) (prevLogIndex int, prev
 	if err != nil {
 		return -1, -1
 	}
-	id, _ := res.LastInsertId()
-	log := getLogTable(int(id) - 1)
-	return int(id) - 1, log.term
+	logIndex, _ := res.LastInsertId()
+	log := getLogTable(int(logIndex) - 1)
+	logFile("append", "insertLogTable command: "+log.command+" index: "+strconv.Itoa(log.logIndex))
+	return int(logIndex) - 1, log.term
+}
+
+func incrementVoteCount(index int) (count int) {
+	logFile("append", "increment vote count index: "+strconv.Itoa(index))
+	mutexLogTable.Lock()
+	db, err := sql.Open("sqlite3", dbName)
+	row, err := db.Query("select votes from log where logIndex = " + strconv.Itoa(index))
+	checkErr(err)
+	var vote int
+	var term int
+	var command string
+	var logIndex int
+	for row.Next() {
+		err = row.Scan(&logIndex, &term, &command, &vote)
+	}
+	logFile("append", "votes: "+strconv.Itoa(vote)+" term: "+strconv.Itoa(term)+" command: "+command+" logIndex: "+strconv.Itoa(logIndex))
+	status := updateLogTable(index, vote+1)
+	logFile("append", "incrementVoteCount vote current: "+strconv.Itoa(vote+1)+" status: "+strconv.FormatBool(status)+"\n")
+	mutexLogTable.Unlock()
+	if status {
+		return vote + 1
+	}
+	return -1
 }
 
 func updateLogTable(index int, votes int) (result bool) {
 	_, err := updateLogStmt.Exec(index, votes)
 	checkErr(err)
-
+	db, err := sql.Open("sqlite3", dbName)
+	row, err := db.Query("select * from log where logIndex = " + strconv.Itoa(index))
+	checkErr(err)
+	var vote int
+	for row.Next() {
+		err = row.Scan(&vote)
+	}
 	if err != nil {
 		return false
 	}
