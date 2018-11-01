@@ -72,7 +72,8 @@ func countVotes(data []string) {
 			go heartbeat(otherNodes, myNodeID, connMap, getState())
 			candidate = false
 			votes = 0
-			nextIndex = make(map[string]int)
+			// Stores Next Commit Index for each Follower
+			nextIndex = initNextIndexMap()
 		}
 	}
 	fmt.Println("Count Votes END")

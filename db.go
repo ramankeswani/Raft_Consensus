@@ -203,9 +203,9 @@ func insertLogTable(term int, command string, votes int) (prevLogIndex int, prev
 		return -1, -1
 	}
 	logIndex, _ = res.LastInsertId()
-	log := getLogTable(int(logIndex - 1))
-	logFile("append", "insertLogTable previous tuple command: "+log.command+" index: "+strconv.Itoa(log.logIndex)+"\n")
-	return int(logIndex) - 1, log.term
+	logPrevious := getLogTable(int(logCurrent.logIndex - 1))
+	logFile("append", "insertLogTable previous tuple command: "+logPrevious.command+" index: "+strconv.Itoa(logPrevious.logIndex)+"\n")
+	return int(logPrevious.logIndex), logPrevious.term
 }
 
 func incrementVoteCount(index int) (count int) {
@@ -213,8 +213,8 @@ func incrementVoteCount(index int) (count int) {
 	mutexLogTable.Lock()
 	logFile("append", "increment lock started\n")
 	db, err := sql.Open("sqlite3", dbName)
-	//row, err := db.Query("select votes from log where logIndex = " + strconv.Itoa(index))
-	row, err := db.Query("select * from log where logIndex = 1")
+	row, err := db.Query("select * from log where logIndex = " + strconv.Itoa(index))
+	//row, err := db.Query("select * from log where logIndex = 1")
 	checkErr(err)
 	var vote int
 	var term int
@@ -254,15 +254,15 @@ func updateLogTable(index int, votes int) (result bool) {
 	}
 	return true */
 	logFile("append", "updateLogTable calling getLogTable\n")
-	_ = getLogTable(logIndex)
+	_ = getLogTable(int(lastID))
 	return true
 }
 
 func getLogTable(logIndex int) (l log) {
-	logFile("append", "getLogTable starts\n")
+	logFile("append", "getLogTable starts logindex: "+strconv.Itoa(logIndex)+"\n")
 	db, err := sql.Open("sqlite3", dbName)
-	//rows, err := db.Query("SELECT * FROM log where logIndex = " + strconv.Itoa(logIndex))
-	rows, err := db.Query("SELECT * FROM log where logIndex = 1")
+	rows, err := db.Query("SELECT * FROM log where logIndex = " + strconv.Itoa(logIndex))
+	//rows, err := db.Query("SELECT * FROM log where logIndex = 1")
 	var lIndex int
 	var t int
 	var command string
@@ -285,4 +285,19 @@ func getLogTable(logIndex int) (l log) {
 	db.Close()
 	logFile("append", "getLogTable ends\n")
 	return l
+}
+
+func getLatestLog() (index int) {
+	logFile("commit", "getLatestLog() starts\n")
+	db, err := sql.Open("sqlite3", dbName)
+	checkErr(err)
+	row, err := db.Query("SELECT logIndex from log order by logIndex desc limit 1")
+	var id int
+	for row.Next() {
+		err = row.Scan(&id)
+		fmt.Println("commit", "getLatestLog() index: "+strconv.Itoa(id)+"\n")
+	}
+	db.Close()
+	logFile("commit", "getLatestLog() ends\n")
+	return id
 }

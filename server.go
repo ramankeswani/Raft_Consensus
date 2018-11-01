@@ -69,7 +69,7 @@ func handleRequests(conn net.Conn) {
 
 		// Reset Timer if received message was a heartbeat
 		go updateHBFlag(data, timer)
-		logFile("append", data)
+		logFile("commit", data)
 		//fmt.Println("Received:", data)
 		go processRequest(data)
 	}
