@@ -50,6 +50,9 @@ func handleAppendEntryRPCFromLeader(message string) {
 	logFile("append", "handleAppendEntryRPCFromLeader Ends\n")
 }
 
+// TO-DO - Move to persistent
+var isCommited map[int]bool
+
 func handleAppendEntryRPCReply(message string) {
 	mutexUpdateVote.Lock()
 	logFile("append", "handleAppendEntryRPCReply Starts\n")
@@ -61,7 +64,11 @@ func handleAppendEntryRPCReply(message string) {
 		votes := incrementVoteCount(logIndex)
 		logFile("append", "handleAppendEntryRPCReply votes: "+strconv.Itoa(votes)+"\n")
 		if float32(float32(votes)/float32(totalNodes)) > 0.5 {
-			logFile("append", "majority\n")
+			logFile("commit", "majority isCommited[logIndex]: "+strconv.FormatBool(isCommited[logIndex])+"\n")
+			if !isCommited[logIndex] {
+				sendCommitRequest(logIndex)
+			}
+			isCommited[logIndex] = true
 		}
 	}
 	logFile("append", "handleAppendEntryRPCReply Ends\n")

@@ -15,7 +15,7 @@ func initLog(nodeID string) {
 }
 
 func logFile(tag string, message string) {
-	if strings.Compare(tag, logTag) == 0 && !strings.Contains(message, "ThisIsHeartbeat") {
+	if !strings.Contains(message, "ThisIsHeartbeat") {
 		fmt.Fprintf(f, message)
 	}
 }
