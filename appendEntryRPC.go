@@ -3,13 +3,16 @@ package main
 import (
 	"strconv"
 	"strings"
+	"sync"
 )
+
+var mutexUpdateVote = &sync.Mutex{}
 
 /*
 Creates Append Entry RPC Request and sends the request to all Clients
 */
 func appendEntryInit(command string) {
-	logFile("append", "Append Entry Starts Map len:"+strconv.Itoa(len(connMap))+" command: "+command+"\n")
+	logFile("append", "Append Entry Init Starts Map len:"+strconv.Itoa(len(connMap))+" command: "+command+"\n")
 	prevLogIndex, prevLogTerm := insertLogTable(term, command, 1)
 	logFile("append", "id: "+strconv.Itoa(prevLogIndex)+"\n")
 	s := getState()
@@ -24,24 +27,27 @@ func appendEntryInit(command string) {
 }
 
 func handleAppendEntryRPCFromLeader(message string) {
-	logFile("append", "Append Entry Starts\n")
+	logFile("append", "handleAppendEntryRPCFromLeader Starts\n")
 	s := getState()
 	dataSlice := strings.Split(message, " ")
 	rpcTerm, _ := strconv.Atoi(dataSlice[2])
 	logFile("append", "state curr term: "+strconv.Itoa(s.currentTerm)+" rpcterm: "+dataSlice[2]+
-		" dataslice[0]: "+dataSlice[0]+" commitIndex: "+dataSlice[6]+"\n")
+		" dataslice[0]: "+dataSlice[0]+" New Log Index: "+dataSlice[6]+"\n")
 	if s.currentTerm == rpcTerm {
 		insertLogTable(rpcTerm, dataSlice[5], 0)
+		logFile("append", "handleAppendEntryRPCFromLeader message: "+myNodeID+" "+AppendEntryRPCReply+" YES "+dataSlice[6]+"\n")
 		chanMap[dataSlice[0]] <- myNodeID + " " + AppendEntryRPCReply + " YES " + dataSlice[6] + "\n"
 	}
-	logFile("append", "Append Entry Ends\n")
+	logFile("append", "handleAppendEntryRPCFromLeader Ends\n")
 }
 
 func handleAppendEntryRPCReply(message string) {
 	logFile("append", "handleAppendEntryRPCReply Starts\n")
-	dataSlice := strings.Split(message, " ")
+	dataSlice := strings.Split(strings.TrimSuffix(message, "\n"), " ")
+	logFile("append", "handleAppendEntryRPCReply message: "+message)
 	if strings.Compare(dataSlice[2], YES) == 0 {
 		logIndex, _ := strconv.Atoi(dataSlice[3])
+		logFile("append", "handleAppendEntryRPCReply dataslice[3]: "+dataSlice[3]+" logindex: "+strconv.Itoa(logIndex)+"\n")
 		votes := incrementVoteCount(logIndex)
 		logFile("append", "handleAppendEntryRPCReply votes: "+strconv.Itoa(votes)+"\n")
 		if float32(float32(votes)/float32(totalNodes)) > 0.5 {

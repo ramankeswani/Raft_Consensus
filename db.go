@@ -87,7 +87,6 @@ func tableState() {
 
 	delStateStmt, err = db.Prepare("DELETE FROM state")
 	checkErr(err)
-
 	tableLog()
 }
 
@@ -192,23 +191,30 @@ func checkErr(err error) {
 }
 
 func insertLogTable(term int, command string, votes int) (prevLogIndex int, prevLogTerm int) {
+	logFile("append", "insertLogTable starts command: "+command+"\n")
 	res, err := insertLogStmt.Exec(term, command, votes)
+	temp, _ := res.RowsAffected()
+	logFile("append", "insertLogTable err null is null: "+strconv.FormatBool(err == nil)+" res rows affected: "+strconv.Itoa(int(temp))+"\n")
 	checkErr(err)
-
+	logIndex, _ := res.LastInsertId()
+	logCurrent := getLogTable(int(logIndex))
+	logFile("append", "insertLogTable logcurrent  index: "+strconv.Itoa(logCurrent.logIndex)+" command: "+logCurrent.command+"\n")
 	if err != nil {
 		return -1, -1
 	}
-	logIndex, _ := res.LastInsertId()
-	log := getLogTable(int(logIndex) - 1)
-	logFile("append", "insertLogTable command: "+log.command+" index: "+strconv.Itoa(log.logIndex))
+	logIndex, _ = res.LastInsertId()
+	log := getLogTable(int(logIndex - 1))
+	logFile("append", "insertLogTable previous tuple command: "+log.command+" index: "+strconv.Itoa(log.logIndex)+"\n")
 	return int(logIndex) - 1, log.term
 }
 
 func incrementVoteCount(index int) (count int) {
-	logFile("append", "increment vote count index: "+strconv.Itoa(index))
+	logFile("append", "increment vote count index: "+strconv.Itoa(index)+"\n")
 	mutexLogTable.Lock()
+	logFile("append", "increment lock started\n")
 	db, err := sql.Open("sqlite3", dbName)
-	row, err := db.Query("select votes from log where logIndex = " + strconv.Itoa(index))
+	//row, err := db.Query("select votes from log where logIndex = " + strconv.Itoa(index))
+	row, err := db.Query("select * from log where logIndex = 1")
 	checkErr(err)
 	var vote int
 	var term int
@@ -217,9 +223,11 @@ func incrementVoteCount(index int) (count int) {
 	for row.Next() {
 		err = row.Scan(&logIndex, &term, &command, &vote)
 	}
-	logFile("append", "votes: "+strconv.Itoa(vote)+" term: "+strconv.Itoa(term)+" command: "+command+" logIndex: "+strconv.Itoa(logIndex))
-	status := updateLogTable(index, vote+1)
-	logFile("append", "incrementVoteCount vote current: "+strconv.Itoa(vote+1)+" status: "+strconv.FormatBool(status)+"\n")
+	logFile("append", "vote: "+strconv.Itoa(vote)+" term: "+strconv.Itoa(term)+" command: "+command+" logIndex: "+strconv.Itoa(logIndex)+"\n")
+	status := updateLogTable(vote+1, index)
+	logFile("append", "increment lock ended\n")
+	row.Close()
+	db.Close()
 	mutexLogTable.Unlock()
 	if status {
 		return vote + 1
@@ -228,10 +236,14 @@ func incrementVoteCount(index int) (count int) {
 }
 
 func updateLogTable(index int, votes int) (result bool) {
-	_, err := updateLogStmt.Exec(index, votes)
+	logFile("append", "updateLogTable Starts index: "+strconv.Itoa(index)+" votes: "+strconv.Itoa(votes)+"\n")
+	rows, err := updateLogStmt.Exec(index, votes)
+	lastID, _ := rows.LastInsertId()
+	rowsAff, _ := rows.RowsAffected()
+	logFile("append", "updateLogTable lastID: "+strconv.Itoa(int(lastID))+" rowsAff: "+strconv.Itoa(int(rowsAff))+"\n")
 	checkErr(err)
-	db, err := sql.Open("sqlite3", dbName)
-	row, err := db.Query("select * from log where logIndex = " + strconv.Itoa(index))
+	//row, err := db.Query("select * from log where logIndex = " + strconv.Itoa(index))
+	/* row, err := db.Query("select votes from log where logIndex = 1")
 	checkErr(err)
 	var vote int
 	for row.Next() {
@@ -240,12 +252,17 @@ func updateLogTable(index int, votes int) (result bool) {
 	if err != nil {
 		return false
 	}
+	return true */
+	logFile("append", "updateLogTable calling getLogTable\n")
+	_ = getLogTable(logIndex)
 	return true
 }
 
 func getLogTable(logIndex int) (l log) {
+	logFile("append", "getLogTable starts\n")
 	db, err := sql.Open("sqlite3", dbName)
-	rows, err := db.Query("SELECT * FROM log where logIndex = " + strconv.Itoa(logIndex))
+	//rows, err := db.Query("SELECT * FROM log where logIndex = " + strconv.Itoa(logIndex))
+	rows, err := db.Query("SELECT * FROM log where logIndex = 1")
 	var lIndex int
 	var t int
 	var command string
@@ -254,8 +271,9 @@ func getLogTable(logIndex int) (l log) {
 		logIndex: -1,
 	}
 	for rows.Next() {
-		err = rows.Scan(&lIndex, &t, &command, &t, &v)
+		err = rows.Scan(&lIndex, &t, &command, &v)
 		checkErr(err)
+		logFile("append", "getLogTable Inside Loop: lIndex: "+strconv.Itoa(lIndex)+" command: "+command+" votes: "+strconv.Itoa(v)+"\n")
 		l = log{
 			logIndex: lIndex,
 			term:     t,
@@ -263,5 +281,8 @@ func getLogTable(logIndex int) (l log) {
 			votes:    v,
 		}
 	}
+	rows.Close()
+	db.Close()
+	logFile("append", "getLogTable ends\n")
 	return l
 }
