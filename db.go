@@ -24,10 +24,11 @@ type state struct {
 }
 
 type log struct {
-	logIndex int
-	term     int
-	command  string
-	votes    int
+	logIndex   int
+	term       int
+	command    string
+	votes      int
+	isCommited int
 }
 
 type nodes []node
@@ -36,6 +37,7 @@ var insertStateStmt *sql.Stmt
 var delStateStmt *sql.Stmt
 var insertLogStmt *sql.Stmt
 var updateLogStmt *sql.Stmt
+var commitLogStmt *sql.Stmt
 var dbName string
 var mutex = &sync.Mutex{}
 var mutexLogTable = &sync.Mutex{}
@@ -174,13 +176,15 @@ func getNodesFromDB() nodes {
 func tableLog() {
 	db, err := sql.Open("sqlite3", dbName)
 
-	createStatementLog, err := db.Prepare("CREATE TABLE log (logIndex integer PRIMARY KEY AUTOINCREMENT, term integer, command text, votes integer)")
+	createStatementLog, err := db.Prepare("CREATE TABLE log (logIndex integer PRIMARY KEY AUTOINCREMENT, term integer, command text, votes integer, commited integer)")
 	createStatementLog.Exec()
 	checkErr(err)
 
-	insertLogStmt, err = db.Prepare("INSERT INTO log(term, command, votes) values(?,?,?)")
+	insertLogStmt, err = db.Prepare("INSERT INTO log(term, command, votes, commited) values(?,?,?,?)")
 	checkErr(err)
 	updateLogStmt, err = db.Prepare("UPDATE log SET votes=? where logIndex=?")
+	checkErr(err)
+	commitLogStmt, err = db.Prepare("UPDATE log SET commited=? where logIndex=?")
 	checkErr(err)
 }
 
@@ -192,7 +196,7 @@ func checkErr(err error) {
 
 func insertLogTable(term int, command string, votes int) (prevLogIndex int, prevLogTerm int) {
 	logFile("append", "insertLogTable starts command: "+command+"\n")
-	res, err := insertLogStmt.Exec(term, command, votes)
+	res, err := insertLogStmt.Exec(term, command, votes, 0)
 	temp, _ := res.RowsAffected()
 	logFile("append", "insertLogTable err null is null: "+strconv.FormatBool(err == nil)+" res rows affected: "+strconv.Itoa(int(temp))+"\n")
 	checkErr(err)
@@ -213,26 +217,32 @@ func incrementVoteCount(index int) (count int) {
 	mutexLogTable.Lock()
 	logFile("append", "increment lock started\n")
 	db, err := sql.Open("sqlite3", dbName)
-	row, err := db.Query("select * from log where logIndex = " + strconv.Itoa(index))
-	//row, err := db.Query("select * from log where logIndex = 1")
 	checkErr(err)
-	var vote int
-	var term int
-	var command string
-	var logIndex int
-	for row.Next() {
-		err = row.Scan(&logIndex, &term, &command, &vote)
-	}
-	logFile("append", "vote: "+strconv.Itoa(vote)+" term: "+strconv.Itoa(term)+" command: "+command+" logIndex: "+strconv.Itoa(logIndex)+"\n")
-	status := updateLogTable(vote+1, index)
+	row, err := db.Query("select * from log where logIndex = " + strconv.Itoa(index))
+	l := getLogTable(index)
+	logFile("append", "vote: "+strconv.Itoa(l.votes)+" term: "+strconv.Itoa(l.term)+" command: "+l.command+" logIndex: "+strconv.Itoa(logIndex)+"\n")
+	status := updateLogTable(l.votes+1, index)
 	logFile("append", "increment lock ended\n")
 	row.Close()
 	db.Close()
 	mutexLogTable.Unlock()
 	if status {
-		return vote + 1
+		return l.votes + 1
 	}
 	return -1
+}
+
+func commitLog(index int) (result bool) {
+	logFile("commit", "commitLog Starts index: "+strconv.Itoa(index)+"\n")
+	res, err := commitLogStmt.Exec(1, index)
+	checkErr(err)
+	ra, _ := res.RowsAffected()
+	logFile("commit", "commitLog rows affected: "+strconv.Itoa(int(ra))+"\n")
+	logFile("commit", "commitLog Ends index: "+strconv.Itoa(index)+"\n")
+	if ra == 1 {
+		return true
+	}
+	return false
 }
 
 func updateLogTable(index int, votes int) (result bool) {
@@ -242,17 +252,6 @@ func updateLogTable(index int, votes int) (result bool) {
 	rowsAff, _ := rows.RowsAffected()
 	logFile("append", "updateLogTable lastID: "+strconv.Itoa(int(lastID))+" rowsAff: "+strconv.Itoa(int(rowsAff))+"\n")
 	checkErr(err)
-	//row, err := db.Query("select * from log where logIndex = " + strconv.Itoa(index))
-	/* row, err := db.Query("select votes from log where logIndex = 1")
-	checkErr(err)
-	var vote int
-	for row.Next() {
-		err = row.Scan(&vote)
-	}
-	if err != nil {
-		return false
-	}
-	return true */
 	logFile("append", "updateLogTable calling getLogTable\n")
 	_ = getLogTable(int(lastID))
 	return true
@@ -267,18 +266,20 @@ func getLogTable(logIndex int) (l log) {
 	var t int
 	var command string
 	var v int
+	var c int
 	l = log{
 		logIndex: -1,
 	}
 	for rows.Next() {
-		err = rows.Scan(&lIndex, &t, &command, &v)
+		err = rows.Scan(&lIndex, &t, &command, &v, &c)
 		checkErr(err)
-		logFile("append", "getLogTable Inside Loop: lIndex: "+strconv.Itoa(lIndex)+" command: "+command+" votes: "+strconv.Itoa(v)+"\n")
+		logFile("append", "getLogTable Inside Loop: lIndex: "+strconv.Itoa(lIndex)+" command: "+command+" votes: "+strconv.Itoa(v)+" isCommited: "+strconv.Itoa(c)+"\n")
 		l = log{
-			logIndex: lIndex,
-			term:     t,
-			command:  command,
-			votes:    v,
+			logIndex:   lIndex,
+			term:       t,
+			command:    command,
+			votes:      v,
+			isCommited: c,
 		}
 	}
 	rows.Close()
@@ -287,17 +288,18 @@ func getLogTable(logIndex int) (l log) {
 	return l
 }
 
-func getLatestLog() (index int) {
+func getLatestLog() (l log) {
 	logFile("commit", "getLatestLog() starts\n")
 	db, err := sql.Open("sqlite3", dbName)
 	checkErr(err)
-	row, err := db.Query("SELECT logIndex from log order by logIndex desc limit 1")
+	row, err := db.Query("SELECT * from log order by logIndex desc limit 1")
 	var id int
 	for row.Next() {
 		err = row.Scan(&id)
 		fmt.Println("commit", "getLatestLog() index: "+strconv.Itoa(id)+"\n")
 	}
+	l = getLogTable(id)
 	db.Close()
 	logFile("commit", "getLatestLog() ends\n")
-	return id
+	return l
 }

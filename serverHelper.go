@@ -50,6 +50,8 @@ func processRequest(message string) {
 		handleAppendEntryRPCFromLeader(message)
 	} else if data[1] == AppendEntryRPCReply {
 		handleAppendEntryRPCReply(message)
+	} else if data[1] == CommitEntryRequest {
+		handleCommitEntryRequest(message)
 	}
 	//fmt.Println("process Request Ends")
 }

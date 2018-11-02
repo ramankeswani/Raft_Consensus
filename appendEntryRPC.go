@@ -82,12 +82,13 @@ func sendCommitRequest(logIndex int) {
 	logFile("commit", "sendCommitRequest Starts logIndex: "+strconv.Itoa(logIndex))
 	prevLogEntry := getLogTable(logIndex - 1)
 	s := getState()
-	message := myNodeID + " " + strconv.Itoa(s.currentTerm) + " CommitEntryRequest " +
+	message := myNodeID + " " + strconv.Itoa(s.currentTerm) + " " + CommitEntryRequest + " " +
 		strconv.Itoa(prevLogEntry.logIndex) + " " + strconv.Itoa(prevLogEntry.term) + " " + strconv.Itoa(logIndex) + "\n"
 	logFile("commit", "sendCommitRequest Message TEMP:"+message)
 	for node := range otherNodes {
 		nextID := nextIndex[otherNodes[node].nodeID]
-		message = myNodeID + " " + strconv.Itoa(s.currentTerm) + " CommitEntryRequest " +
+		// myNodeID |CommitEntryRequest |  Current Term | PrevLogIndex | PrevLogTerm | Next Commit Index
+		message = myNodeID + " " + CommitEntryRequest + " " + strconv.Itoa(s.currentTerm) + " " +
 			strconv.Itoa(prevLogEntry.logIndex) + " " + strconv.Itoa(prevLogEntry.term) + " " +
 			strconv.Itoa(nextID) + "\n"
 		chanMap[otherNodes[node].nodeID] <- message
@@ -103,8 +104,8 @@ Initial value is the highest log index in leader's own log
 func initNextIndexMap() (nextIndex map[string]int) {
 	logFile("commit", "initNextIndexMap starts\n")
 	nextIndex = make(map[string]int)
-	index := getLatestLog()
-	if index == -1 {
+	index := getLatestLog().logIndex
+	if index < 0 {
 		index = 1
 	}
 	for node := range otherNodes {
@@ -116,4 +117,59 @@ func initNextIndexMap() (nextIndex map[string]int) {
 	}
 	logFile("commit", "initNextIndexMap ends\n")
 	return nextIndex
+}
+
+/*
+Invoked by client's server to process Commit Entry Request from Leader
+Sends a confirmation back to leader if prev Log entry matches(and commits the log) or rejects otherwise
+Input Message Format:  LeaderNodeID | CommitEntryRequest | Current Term | PrevLogIndex | PrevLogTerm | Next Commit Index
+*/
+func handleCommitEntryRequest(message string) {
+	logFile("commit", "handleCommitEntryRequest Starts\n")
+	s := getState()
+	message = strings.TrimSuffix(message, "\n")
+	dataSlice := strings.Split(message, " ")
+	leaderTerm, _ := strconv.Atoi(dataSlice[2])
+	logIndex, _ := strconv.Atoi(dataSlice[5])
+	logFile("commit", "handleCommitEntryRequest leader term : "+dataSlice[2]+" logIndex: "+dataSlice[5]+
+		" leaderid: "+dataSlice[0]+" myterm: "+strconv.Itoa(s.currentTerm)+"\n")
+	if s.currentTerm > leaderTerm {
+		message = myNodeID + " " + strconv.Itoa(s.currentTerm) + " " + s.leader + " " + REJECT + "\n"
+		chanMap[dataSlice[0]] <- message
+		return
+	}
+	prevLogIndex, _ := strconv.Atoi(dataSlice[3])
+	prevLogTerm, _ := strconv.Atoi(dataSlice[4])
+	if prevLogIndex != -1 {
+		if !appendRPCCheck(prevLogIndex, prevLogTerm) {
+			message = myNodeID + " " + dataSlice[2] + " " + s.leader + " " + REJECT + "\n"
+			chanMap[dataSlice[0]] <- message
+			return
+		}
+	}
+	commitStatus := commitLog(logIndex)
+	if commitStatus {
+		message = myNodeID + " " + dataSlice[2] + " " + s.leader + " " + ACCEPT + "\n"
+	} else {
+		message = myNodeID + " " + dataSlice[2] + " " + s.leader + " " + REJECT + "\n"
+	}
+	logFile("commit", "handleCommitEntryRequest message:"+message)
+	logFile("commit", "handleCommitEntryRequest chan:"+strconv.FormatBool(chanMap[dataSlice[0]] != nil)+"\n")
+	chanMap[dataSlice[0]] <- message
+	logFile("commit", "handleCommitEntryRequest Ends\n")
+}
+
+/*
+Compares Previous Log Index and Term to ensure safe replication of logs
+*/
+func appendRPCCheck(prevLogIndex int, prevLogTerm int) (matches bool) {
+	logFile("commit", "appendRPCCheck Starts\n")
+	l := getLatestLog()
+	l = getLogTable(l.logIndex - 1)
+	matches = true
+	if l.logIndex != prevLogIndex || l.term != prevLogTerm {
+		matches = false
+	}
+	logFile("commit", "appendRPCCheck Ends matches: "+strconv.FormatBool(matches)+"\n")
+	return matches
 }
