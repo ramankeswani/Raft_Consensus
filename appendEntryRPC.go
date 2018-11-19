@@ -64,7 +64,7 @@ func handleAppendEntryRPCFromLeader(message string) {
 }
 
 // TO-DO - Move to persistent
-var isCommited map[int]bool
+//var isCommited map[int]bool
 
 func handleAppendEntryRPCReply(message string) {
 	mutexUpdateVote.Lock()
@@ -77,12 +77,12 @@ func handleAppendEntryRPCReply(message string) {
 		votes := incrementVoteCount(logIndex)
 		logFile("append", "handleAppendEntryRPCReply votes: "+strconv.Itoa(votes)+"\n")
 		if float32(float32(votes)/float32(totalNodes)) > 0.5 {
-			logFile("commit", "majority isCommited[logIndex]: "+strconv.FormatBool(isCommited[logIndex])+"\n")
-			if !isCommited[logIndex] {
+			l := getLogTable(logIndex)
+			logFile("commit", "majority isCommited[logIndex]: "+strconv.Itoa(l.isCommited)+"\n")
+			if l.isCommited == 0 {
 				sendCommitRequest(logIndex)
 				commitLog(logIndex)
 			}
-			isCommited[logIndex] = true
 		}
 	}
 	logFile("append", "handleAppendEntryRPCReply Ends\n")
@@ -120,10 +120,10 @@ func initNextIndexMap() (nextIndex map[string]int) {
 	nextIndex = make(map[string]int)
 	index := getLatestLog().logIndex
 	if index < 0 {
-		index = 1
+		index = 0
 	}
 	for node := range otherNodes {
-		nextIndex[otherNodes[node].nodeID] = index
+		nextIndex[otherNodes[node].nodeID] = index + 1
 	}
 	logFile("commit", "Iterating Map\n")
 	for k, v := range nextIndex {

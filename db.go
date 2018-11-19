@@ -38,6 +38,9 @@ var delStateStmt *sql.Stmt
 var insertLogStmt *sql.Stmt
 var updateLogStmt *sql.Stmt
 var commitLogStmt *sql.Stmt
+var createNextIndexStmt *sql.Stmt
+var insertNextIndexStmt *sql.Stmt
+var updateNextIndexStmt *sql.Stmt
 var dbName string
 var mutex = &sync.Mutex{}
 var mutexLogTable = &sync.Mutex{}
@@ -90,6 +93,7 @@ func tableState() {
 	delStateStmt, err = db.Prepare("DELETE FROM state")
 	checkErr(err)
 	tableLog()
+	//tableNextIndex()
 }
 
 func insertTableState(currentTerm int, votedFor string, leader string, commitIndex int) (res bool) {
@@ -186,6 +190,38 @@ func tableLog() {
 	checkErr(err)
 	commitLogStmt, err = db.Prepare("UPDATE log SET commited=? where logIndex=?")
 	checkErr(err)
+}
+
+func tableNextIndex() {
+	db, err := sql.Open("sqlite3", dbName)
+
+	createNextIndexStmt, err = db.Prepare("CREATE TABLE nextIndex (nodeId text, index integer)")
+	createNextIndexStmt.Exec()
+	checkErr(err)
+
+	insertNextIndexStmt, err = db.Prepare("INSERT INTO nextIndex(nodeId, index) values (?,?)")
+	insertNextIndexStmt.Exec()
+	checkErr(err)
+
+	updateNextIndexStmt, err = db.Prepare("UPDATE nextIndex SET index = ? where nodeId = ?")
+	checkErr(err)
+
+	for node := range otherNodes {
+		insertNextIndexStmt.Exec(otherNodes[node].nodeID, 1)
+	}
+}
+
+func updateNextIndex(nodeID string, index int) (res bool) {
+	logFile("commit", "updateNextIndex starts nodeID: "+nodeID+" index: "+strconv.Itoa(index)+"\n")
+	rows, err := updateNextIndexStmt.Exec(nodeID, index)
+	checkErr(err)
+	lastID, _ := rows.LastInsertId()
+	logFile("commit", "updateNextIndex lastID: "+strconv.Itoa(int(lastID))+"\n")
+	if lastID <= 0 {
+		return false
+	}
+	logFile("commit", "updateNextIndex ends\n")
+	return true
 }
 
 func checkErr(err error) {

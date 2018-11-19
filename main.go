@@ -74,7 +74,7 @@ func main() {
 	totalNodes = len(connMap) + 1
 	go userInput(connMap)
 	chanStartHBCheck <- "start"
-	isCommited = make(map[int]bool)
+	//isCommited = make(map[int]bool)
 
 	// Blocking to keep the main routine alive forever
 	fmt.Println(<-c)
