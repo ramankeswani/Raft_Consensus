@@ -22,10 +22,12 @@ func appendEntryInit(command string) {
 	if prevLogIndex == -1 {
 		tempCurrentIndex = 1
 	}
-	message := myNodeID + " " + AppendEntryRPC + " " + strconv.Itoa(s.currentTerm) + " " + strconv.Itoa(prevLogIndex) +
-		" " + strconv.Itoa(prevLogTerm) + " " + command + " " + strconv.Itoa(tempCurrentIndex) + " " + strconv.Itoa(s.commitIndex) + "\n"
-	logFile("append", message)
+	baseMessage := myNodeID + " " + AppendEntryRPC + " " + strconv.Itoa(s.currentTerm) + " " + strconv.Itoa(prevLogIndex) +
+		" " + strconv.Itoa(prevLogTerm) + " " + command + " " + strconv.Itoa(tempCurrentIndex)
+	logFile("append", baseMessage)
 	for node := range otherNodes {
+		message := baseMessage + " " + strconv.Itoa(nextIndex[otherNodes[node].nodeID]) + "\n"
+		logFile("commit", "AppendEntryInit message: "+message)
 		chanMap[otherNodes[node].nodeID] <- message
 	}
 	logFile("append", "Append Entry Init Ends\n")
@@ -33,6 +35,8 @@ func appendEntryInit(command string) {
 
 /*
 Invoked when a follower receives Append Entry RPC from Leader
+Incoming Message Format:
+LeaderNodeID | AppendEntryRPC | Current Term | PrevLogIndex | PrevLogTerm | Log Command | New Log Index | CommitIndex
 */
 func handleAppendEntryRPCFromLeader(message string) {
 	logFile("append", "handleAppendEntryRPCFromLeader Starts\n")
@@ -42,6 +46,15 @@ func handleAppendEntryRPCFromLeader(message string) {
 	logFile("append", "state curr term: "+strconv.Itoa(s.currentTerm)+" rpcterm: "+dataSlice[2]+
 		" dataslice[0]: "+dataSlice[0]+" New Log Index: "+dataSlice[6]+"\n")
 	if s.currentTerm == rpcTerm {
+		prevLogIndex, _ := strconv.Atoi(dataSlice[3])
+		prevLogTerm, _ := strconv.Atoi(dataSlice[4])
+		if prevLogIndex != -1 {
+			if !appendRPCCheck(prevLogIndex, prevLogTerm) {
+				message = myNodeID + " " + dataSlice[2] + " " + s.leader + " " + REJECT + "\n"
+				chanMap[dataSlice[0]] <- message
+				return
+			}
+		}
 		pLID, pLT := insertLogTable(rpcTerm, dataSlice[5], 0)
 		logFile("append", "handleAppendEntryRPCFromLeader message: "+myNodeID+" "+AppendEntryRPCReply+" YES "+
 			"prevIndex: "+strconv.Itoa(pLID)+" pLogTerm: "+strconv.Itoa(pLT)+" "+dataSlice[6]+"\n")
@@ -67,6 +80,7 @@ func handleAppendEntryRPCReply(message string) {
 			logFile("commit", "majority isCommited[logIndex]: "+strconv.FormatBool(isCommited[logIndex])+"\n")
 			if !isCommited[logIndex] {
 				sendCommitRequest(logIndex)
+				commitLog(logIndex)
 			}
 			isCommited[logIndex] = true
 		}
@@ -122,36 +136,22 @@ func initNextIndexMap() (nextIndex map[string]int) {
 /*
 Invoked by client's server to process Commit Entry Request from Leader
 Sends a confirmation back to leader if prev Log entry matches(and commits the log) or rejects otherwise
-Input Message Format:  LeaderNodeID | CommitEntryRequest | Current Term | PrevLogIndex | PrevLogTerm | Next Commit Index
+Input Message Format:
+LeaderNodeID | CommitEntryRequest | Current Term | PrevLogIndex | PrevLogTerm | Next Commit Index
 */
 func handleCommitEntryRequest(message string) {
 	logFile("commit", "handleCommitEntryRequest Starts\n")
 	s := getState()
 	message = strings.TrimSuffix(message, "\n")
 	dataSlice := strings.Split(message, " ")
-	leaderTerm, _ := strconv.Atoi(dataSlice[2])
 	logIndex, _ := strconv.Atoi(dataSlice[5])
 	logFile("commit", "handleCommitEntryRequest leader term : "+dataSlice[2]+" logIndex: "+dataSlice[5]+
 		" leaderid: "+dataSlice[0]+" myterm: "+strconv.Itoa(s.currentTerm)+"\n")
-	if s.currentTerm > leaderTerm {
-		message = myNodeID + " " + strconv.Itoa(s.currentTerm) + " " + s.leader + " " + REJECT + "\n"
-		chanMap[dataSlice[0]] <- message
-		return
-	}
-	prevLogIndex, _ := strconv.Atoi(dataSlice[3])
-	prevLogTerm, _ := strconv.Atoi(dataSlice[4])
-	if prevLogIndex != -1 {
-		if !appendRPCCheck(prevLogIndex, prevLogTerm) {
-			message = myNodeID + " " + dataSlice[2] + " " + s.leader + " " + REJECT + "\n"
-			chanMap[dataSlice[0]] <- message
-			return
-		}
-	}
 	commitStatus := commitLog(logIndex)
 	if commitStatus {
-		message = myNodeID + " " + dataSlice[2] + " " + s.leader + " " + ACCEPT + "\n"
+		message = myNodeID + " " + CommitEntryReply + " " + dataSlice[2] + " " + s.leader + " " + ACCEPT + " " + strconv.Itoa(logIndex) + "\n"
 	} else {
-		message = myNodeID + " " + dataSlice[2] + " " + s.leader + " " + REJECT + "\n"
+		message = myNodeID + " " + CommitEntryReply + " " + dataSlice[2] + " " + s.leader + " " + REJECT + " " + strconv.Itoa(logIndex) + "\n"
 	}
 	logFile("commit", "handleCommitEntryRequest message:"+message)
 	logFile("commit", "handleCommitEntryRequest chan:"+strconv.FormatBool(chanMap[dataSlice[0]] != nil)+"\n")
@@ -165,11 +165,28 @@ Compares Previous Log Index and Term to ensure safe replication of logs
 func appendRPCCheck(prevLogIndex int, prevLogTerm int) (matches bool) {
 	logFile("commit", "appendRPCCheck Starts\n")
 	l := getLatestLog()
-	l = getLogTable(l.logIndex - 1)
 	matches = true
 	if l.logIndex != prevLogIndex || l.term != prevLogTerm {
 		matches = false
 	}
 	logFile("commit", "appendRPCCheck Ends matches: "+strconv.FormatBool(matches)+"\n")
 	return matches
+}
+
+/*
+Invoked when Followers reply to Commit Entry Request
+Updates the nextIndex for follower
+Input Message Format:
+FollowerID | CommitEntryReply | Current Term | Leader ID | Response | LogIndex
+*/
+func handleCommitEntryReply(message string) {
+	dataSlice := strings.Split(strings.TrimRight(message, "\n"), " ")
+	logFile("commit", "handleCommitEntryReply Starts data slice 5: "+dataSlice[5]+"\n")
+	tempLogIndex, _ := strconv.Atoi(dataSlice[5])
+	if strings.Compare(dataSlice[4], ACCEPT) == 0 {
+		logFile("commit", "logIndex: "+strconv.Itoa(tempLogIndex)+" "+"map: key: "+dataSlice[0]+" val: "+strconv.Itoa(nextIndex[dataSlice[0]])+"\n")
+		nextIndex[dataSlice[0]] = tempLogIndex + 1
+		logFile("commit", "Next Index "+dataSlice[0]+" "+strconv.Itoa(tempLogIndex+1)+"\n")
+	}
+	logFile("commit", "handleCommitEntryReply Ends\n")
 }

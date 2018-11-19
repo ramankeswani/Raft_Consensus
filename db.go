@@ -292,7 +292,7 @@ func getLatestLog() (l log) {
 	logFile("commit", "getLatestLog() starts\n")
 	db, err := sql.Open("sqlite3", dbName)
 	checkErr(err)
-	row, err := db.Query("SELECT * from log order by logIndex desc limit 1")
+	row, err := db.Query("SELECT logIndex from log order by logIndex desc limit 1")
 	var id int
 	for row.Next() {
 		err = row.Scan(&id)
