@@ -54,6 +54,8 @@ func processRequest(message string) {
 		handleCommitEntryRequest(message)
 	} else if data[1] == CommitEntryReply {
 		handleCommitEntryReply(message)
+	} else if data[1] == NodeRecoverMessage {
+		handleRecoveryMessage(message)
 	}
 	//fmt.Println("process Request Ends")
 }

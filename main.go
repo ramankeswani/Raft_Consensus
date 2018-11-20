@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -31,8 +32,8 @@ Usage: ./main port nodeID
 */
 func main() {
 
-	if len(os.Args) != 3 {
-		fmt.Fprintf(os.Stderr, "Provide IP, usage %s port nodeID ", os.Args[0])
+	if len(os.Args) != 4 {
+		fmt.Fprintf(os.Stderr, "Provide IP, usage %s port nodeID RecoverFlag", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -70,6 +71,10 @@ func main() {
 		}
 		go heartbeat(otherNodes, nodeID, connMap, s)
 	} */
+
+	if strings.Compare(os.Args[3], "1") == 0 {
+		initRecovery(myPort)
+	}
 
 	totalNodes = len(connMap) + 1
 	go userInput(connMap)
