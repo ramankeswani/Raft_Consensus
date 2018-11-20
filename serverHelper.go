@@ -45,17 +45,21 @@ func processRequest(message string) {
 	} else if data[1] == RequestVoteRPCReply && candidate {
 		countVotes(data)
 	} else if data[1] == AppendEntryFromClient {
-		appendEntryInit(data[2])
+		go appendEntryInit(data[2])
 	} else if data[1] == AppendEntryRPC {
-		handleAppendEntryRPCFromLeader(message)
+		go handleAppendEntryRPCFromLeader(message, false)
 	} else if data[1] == AppendEntryRPCReply {
-		handleAppendEntryRPCReply(message)
+		go handleAppendEntryRPCReply(message)
 	} else if data[1] == CommitEntryRequest {
-		handleCommitEntryRequest(message)
+		go handleCommitEntryRequest(message)
 	} else if data[1] == CommitEntryReply {
-		handleCommitEntryReply(message)
+		go handleCommitEntryReply(message)
 	} else if data[1] == NodeRecoverMessage {
-		handleRecoveryMessage(message)
+		go handleRecoveryMessage(message)
+	} else if data[1] == SyncRequest {
+		go handleSyncRequest(message)
+	} else if data[1] == SyncRequestReply {
+		chanSyncResp <- message
 	}
 	//fmt.Println("process Request Ends")
 }

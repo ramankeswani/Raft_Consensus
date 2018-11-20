@@ -13,11 +13,13 @@ func initLog(nodeID string) {
 	file, err := os.Create("logs/" + nodeID + ".txt")
 	checkError(err, "initLog")
 	f = file
-	t = "recover"
+	t = "*"
 }
 
 func logFile(tag string, message string) {
-	if !strings.Contains(message, "ThisIsHeartbeat") && strings.Compare(tag, t) == 0 {
+	if strings.Compare(t, "*") == 0 && !strings.Contains(message, "ThisIsHeartbeat") {
+		fmt.Fprintf(f, message)
+	} else if !strings.Contains(message, "ThisIsHeartbeat") && strings.Compare(tag, t) == 0 {
 		fmt.Fprintf(f, message)
 	}
 }

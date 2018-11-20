@@ -20,6 +20,8 @@ func userInput(connMap map[string]connection) {
 		if strings.Compare(myNodeID, s.leader) != 0 {
 			fmt.Println("leader", s.leader)
 			go contactLeader(connMap[s.leader], text)
+		} else {
+			go appendEntryInit(strings.TrimRight(text, "\n"))
 		}
 	}
 }

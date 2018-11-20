@@ -16,6 +16,8 @@ var otherNodes nodes
 var connChan chan connection
 var chanStartHBCheck chan string
 var chanMessage chan string
+var chanSyncResp chan string
+var chanAppendResp chan string
 
 type connection struct {
 	nodeID string
@@ -44,6 +46,8 @@ func main() {
 	chanStartHBCheck = make(chan string)
 	connMap = make(map[string]connection)
 	chanMap = make(map[string]chan string)
+	chanSyncResp = make(chan string)
+	chanAppendResp = make(chan string, 500)
 	tableCluster(nodeID)
 	fmt.Println("I AM: ", nodeID)
 	fmt.Println("------------------------------")
