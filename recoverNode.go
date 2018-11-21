@@ -84,7 +84,7 @@ func sendAppendRequest(nodeID string, logIndex int) {
 	dataSlice := strings.Split(strings.TrimSuffix(response, "\n"), " ")
 	if strings.Compare(dataSlice[2], ACCEPT) == 0 {
 		go handleAppendEntryRPCReply(response)
-		if strings.Compare(dataSlice[7], "1") == 0 {
+		if strings.Compare(dataSlice[3], "1") == 0 {
 			nextIndex[nodeID] = logIndex + 1
 		}
 		go overwriteLogs(nodeID, logIndex+1)
@@ -115,7 +115,7 @@ func handleSyncRequest(message string) {
 	response := <-chanAppendResp
 	logFile("recover", "handleSyncRequest response: "+response+"\n")
 	dataSlice := strings.Split(strings.TrimRight(response, "\n"), " ")
-	message = dataSlice[0] + " " + SyncRequestReply + " " + dataSlice[2] + "\n"
+	message = dataSlice[0] + " " + SyncRequestReply + " " + dataSlice[2] + " " + dataSlice[3] + "\n"
 	logFile("recover", "handleSyncRequest message: "+message)
 	s := getState()
 	go temp(message, dataSlice[0], s.leader)
