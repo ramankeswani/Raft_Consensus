@@ -62,9 +62,9 @@ func prepareAppendEntryRequest(nodeID string, logIndex int) (message string) {
 		prevLog := getLogTable(logIndex - 1)
 		prevLogIndex = strconv.Itoa(prevLog.logIndex)
 		prevLogTerm = strconv.Itoa(prevLog.term)
-		commitFlag = strconv.Itoa(prevLog.isCommited)
 	}
 	log := getLogTable(logIndex)
+	commitFlag = strconv.Itoa(log.isCommited)
 	message = myNodeID + " " + SyncRequest + " " + strconv.Itoa(s.currentTerm) + " " + prevLogIndex + " " +
 		prevLogTerm + " " + log.command + " " + strconv.Itoa(logIndex) + " " + commitFlag + "\n"
 	logFile("recover", "prepareAppendEntryRequest ends \n")
@@ -83,14 +83,15 @@ func sendAppendRequest(nodeID string, logIndex int) {
 	logFile("recover", "sendAppendRequest respones: "+response+"\n")
 	dataSlice := strings.Split(strings.TrimSuffix(response, "\n"), " ")
 	if strings.Compare(dataSlice[2], ACCEPT) == 0 {
-		go handleAppendEntryRPCReply(response)
+		//go handleAppendEntryRPCReply(response)
 		if strings.Compare(dataSlice[3], "1") == 0 {
 			nextIndex[nodeID] = logIndex + 1
 		}
 		go overwriteLogs(nodeID, logIndex+1)
-	} else {
-		go sendAppendRequest(nodeID, logIndex-1)
 	}
+	/* else {
+		go sendAppendRequest(nodeID, logIndex-1)
+	} */
 	logFile("recover", "sendAppendRequest Ends \n")
 }
 
@@ -101,7 +102,7 @@ func overwriteLogs(nodeID string, logIndex int) {
 	logFile("recover", "overwriteLogs Starts \n")
 	n := getLatestLog().logIndex
 	if logIndex <= n {
-		go sendAppendRequest(nodeID, i)
+		go sendAppendRequest(nodeID, logIndex)
 	}
 	logFile("recover", "overwriteLogs Ends \n")
 }

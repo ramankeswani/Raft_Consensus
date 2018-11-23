@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -39,11 +40,12 @@ Incoming Message Format:
 LeaderNodeID | AppendEntryRPC | Current Term | PrevLogIndex | PrevLogTerm | Log Command | New Log Index | NextIndex | CommitFlag
 */
 func handleAppendEntryRPCFromLeader(message string, sendRespFlag bool) {
-	logFile("append", "handleAppendEntryRPCFromLeader Starts flag: "+strconv.FormatBool(sendRespFlag)+"\n")
+	logFile("recover", "handleAppendEntryRPCFromLeader Starts flag: "+strconv.FormatBool(sendRespFlag)+"\n")
 	s := getState()
-	dataSlice := strings.Split(message, " ")
+	dataSlice := strings.Split(strings.TrimRight(message, "\n"), " ")
 	rpcTerm, _ := strconv.Atoi(dataSlice[2])
-	logFile("append", "state curr term: "+strconv.Itoa(s.currentTerm)+" rpcterm: "+dataSlice[2]+
+	fmt.Println(dataSlice)
+	logFile("recover", "state curr term: "+strconv.Itoa(s.currentTerm)+" rpcterm: "+dataSlice[2]+
 		" dataslice[0]: "+dataSlice[0]+" New Log Index: "+dataSlice[6]+"\n")
 	if s.currentTerm == rpcTerm {
 		prevLogIndex, _ := strconv.Atoi(dataSlice[3])
@@ -60,7 +62,7 @@ func handleAppendEntryRPCFromLeader(message string, sendRespFlag bool) {
 			}
 		}
 		pLID, pLT := insertLogTable(rpcTerm, dataSlice[5], 0)
-		logFile("append", "handleAppendEntryRPCFromLeader message: "+myNodeID+" "+AppendEntryRPCReply+" YES "+
+		logFile("recover", "handleAppendEntryRPCFromLeader message: "+myNodeID+" "+AppendEntryRPCReply+" YES "+
 			"prevIndex: "+strconv.Itoa(pLID)+" pLogTerm: "+strconv.Itoa(pLT)+" newlogindex: "+dataSlice[6]+"\n")
 		message = myNodeID + " " + AppendEntryRPCReply + " " + ACCEPT + " " + dataSlice[6] + "\n"
 		chanMap[dataSlice[0]] <- message
@@ -68,6 +70,9 @@ func handleAppendEntryRPCFromLeader(message string, sendRespFlag bool) {
 			logFile("recover", "chanAppendResp <- "+message)
 			logFile("recover", "null == chanAppendResp "+strconv.FormatBool(nil == chanAppendResp)+"\n")
 			chanAppendResp <- message
+			if strings.Compare(dataSlice[7], "1") == 0 {
+				commitLog(pLID + 1)
+			}
 			logFile("recover", "message sent into channel\n")
 		}
 	}
@@ -84,17 +89,17 @@ NodeID | AppendEntryRPCReply | ACCEPT | LogIndex
 */
 func handleAppendEntryRPCReply(message string) {
 	mutexUpdateVote.Lock()
-	logFile("append", "handleAppendEntryRPCReply Starts\n")
+	logFile("recover", "handleAppendEntryRPCReply Starts\n")
 	dataSlice := strings.Split(strings.TrimSuffix(message, "\n"), " ")
-	logFile("append", "handleAppendEntryRPCReply message: "+message)
+	logFile("recover", "handleAppendEntryRPCReply message: "+message)
 	if strings.Compare(dataSlice[2], ACCEPT) == 0 {
 		logIndex, _ := strconv.Atoi(dataSlice[3])
-		logFile("append", "handleAppendEntryRPCReply term]: "+dataSlice[3]+" logindex: "+strconv.Itoa(logIndex)+"\n")
+		logFile("recover", "handleAppendEntryRPCReply term]: "+dataSlice[3]+" logindex: "+strconv.Itoa(logIndex)+"\n")
 		votes := incrementVoteCount(logIndex)
-		logFile("append", "handleAppendEntryRPCReply votes: "+strconv.Itoa(votes)+"\n")
+		logFile("recover", "handleAppendEntryRPCReply votes: "+strconv.Itoa(votes)+"\n")
 		if float32(float32(votes)/float32(totalNodes)) > 0.5 {
 			l := getLogTable(logIndex)
-			logFile("commit", "majority isCommited[logIndex]: "+strconv.Itoa(l.isCommited)+"\n")
+			logFile("recover", "majority isCommited[logIndex]: "+strconv.Itoa(l.isCommited)+"\n")
 			if l.isCommited == 0 {
 				sendCommitRequest(logIndex)
 				commitLog(logIndex)
@@ -104,7 +109,7 @@ func handleAppendEntryRPCReply(message string) {
 		logIndex, _ = strconv.Atoi(dataSlice[5])
 		go synchronizeLogs(dataSlice[0], logIndex)
 	}
-	logFile("append", "handleAppendEntryRPCReply Ends\n")
+	logFile("recover", "handleAppendEntryRPCReply Ends\n")
 	mutexUpdateVote.Unlock()
 }
 
