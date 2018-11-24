@@ -131,3 +131,14 @@ func temp(message string, nodeID string, leader string) {
 	chanMap[leader] <- message
 	logFile("recover", "temp Ends \n")
 }
+
+/*
+Initiates log resync for recovering node. Invoked upon receving marker - SyncOnLoad
+*/
+func initLogSync(message string) {
+	logFile("recover", "initLogSync Starts \n")
+	dataSlice := strings.Split(strings.TrimRight(message, "\n"), " ")
+	log := getLatestLog()
+	go synchronizeLogs(dataSlice[0], log.logIndex)
+	logFile("recover", "initLogSync Ends \n")
+}

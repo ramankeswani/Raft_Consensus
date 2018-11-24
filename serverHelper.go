@@ -23,7 +23,7 @@ func initiateElection(myNodeID string) {
 	votes = 0
 	s := getState()
 	term = s.currentTerm + 1
-	insertTableState(term, myNodeID, "", 0)
+	insertTableState(term, myNodeID, "", 0, 0)
 	message := myNodeID + " " + RequestVoteRPC + " " + strconv.Itoa(s.currentTerm+1) + "\n"
 	fmt.Println("election messsage:", message)
 	for remoteID := range otherNodes {
@@ -60,6 +60,8 @@ func processRequest(message string) {
 		go handleSyncRequest(message)
 	} else if data[1] == SyncRequestReply {
 		chanSyncResp <- message
+	} else if data[1] == SyncOnLoad {
+		go initLogSync(message)
 	}
 	//fmt.Println("process Request Ends")
 }
@@ -76,7 +78,7 @@ func countVotes(data []string) {
 		if float32(float32(votes)/float32(totalNodes)) > 0.5 {
 			killTimer()
 			s := getState()
-			insertTableState(s.currentTerm, s.votedFor, myNodeID, 0)
+			insertTableState(s.currentTerm, s.votedFor, myNodeID, 0, 0)
 			leader = true
 			term = s.currentTerm
 			go heartbeat(otherNodes, myNodeID, connMap, getState())
@@ -102,7 +104,7 @@ func handleRequestVoteRPC(data []string, remoteNodeID string) {
 	fmt.Println("From DB: myTerm:", s.currentTerm, " votedFor: ", s.votedFor)
 	if candidateTerm > s.currentTerm {
 		message = myNodeID + " " + RequestVoteRPCReply + " " + "YES\n"
-		res := insertTableState(candidateTerm, remoteNodeID, "", 0)
+		res := insertTableState(candidateTerm, remoteNodeID, "", 0, 0)
 		leader = false
 		candidate = false
 		term = candidateTerm

@@ -111,7 +111,11 @@ func updateHBFlag(data string, timer *time.Timer) {
 		s := getState()
 		t, _ := strconv.Atoi(dataSlice[2])
 		fmt.Println("leader:", dataSlice[1])
-		insertTableState(t, s.votedFor, dataSlice[1], 0)
+		insertTableState(t, s.votedFor, dataSlice[1], 0, 0)
+		if isRecovering {
+			chanMap[s.leader] <- nodeID + " " + SyncOnLoad + "\n"
+			isRecovering = false
+		}
 	}
 }
 

@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"os"
 	"strconv"
 	"sync"
 
@@ -21,6 +20,7 @@ type state struct {
 	votedFor    string
 	leader      string
 	commitIndex int
+	startIndex  int
 }
 
 type log struct {
@@ -49,14 +49,16 @@ var logIndex int
 func tableCluster(nodeID string) {
 
 	dbName = "./databases/" + nodeID + ".db"
-	os.Remove(dbName)
+	//os.Remove(dbName)
 
 	db, err := sql.Open("sqlite3", dbName)
 	checkErr(err)
 
-	createStatement, err := db.Prepare("CREATE TABLE cluster (nodeID text PRIMARY KEY, address text, port integer)")
+	dropStmt, err := db.Prepare("drop table if exists cluster")
+	dropStmt.Exec()
+
+	createStatement, err := db.Prepare("CREATE TABLE IF NOT EXISTS cluster (nodeID text PRIMARY KEY, address text, port integer)")
 	createStatement.Exec()
-	checkErr(err)
 
 	insertStatement, err := db.Prepare("INSERT INTO cluster(nodeID, address, port) values(?,?,?)")
 	checkErr(err)
@@ -83,12 +85,12 @@ func tableState() {
 	fmt.Println("dbname:", dbName)
 	db, err := sql.Open("sqlite3", dbName)
 
-	createStatement, err := db.Prepare("CREATE TABLE state (currentTerm integer, votedFor text, leader text, commitIndex integer)")
+	createStatement, err := db.Prepare("CREATE TABLE IF NOT EXISTS state (currentTerm integer, votedFor text, leader text, commitIndex integer, startIndex integer)")
 	createStatement.Exec()
 	checkErr(err)
 
-	insertStateStmt, err = db.Prepare("INSERT INTO state(currentTerm, votedFor, leader, commitIndex) values(?,?,?,?)")
-	insertStateStmt.Exec(0, "", "", 0)
+	insertStateStmt, err = db.Prepare("INSERT INTO state(currentTerm, votedFor, leader, commitIndex, startIndex) values(?,?,?,?,?)")
+	//insertStateStmt.Exec(0, "", "", 0, 0)
 
 	delStateStmt, err = db.Prepare("DELETE FROM state")
 	checkErr(err)
@@ -96,12 +98,15 @@ func tableState() {
 	//tableNextIndex()
 }
 
-func insertTableState(currentTerm int, votedFor string, leader string, commitIndex int) (res bool) {
-	mutex.Lock()
+func setFirstStartIndex() {
+	insertTableState(0, "", "", 0, 1)
+}
+
+func insertTableState(currentTerm int, votedFor string, leader string, commitIndex int, startIndex int) (res bool) {
+	startIndex = getState().startIndex + startIndex
 	delStateStmt.Exec()
-	_, err := insertStateStmt.Exec(currentTerm, votedFor, leader, commitIndex)
+	_, err := insertStateStmt.Exec(currentTerm, votedFor, leader, commitIndex, startIndex)
 	checkErr(err)
-	mutex.Unlock()
 	if err != nil {
 		return false
 	}
@@ -114,11 +119,13 @@ func getState() state {
 	var votedFor string
 	var leader string
 	var commIndex int
+	var startIndex int
 	s := state{
 		currentTerm: -1,
 		votedFor:    "",
 		leader:      "",
 		commitIndex: -1,
+		startIndex:  0,
 	}
 	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
@@ -129,7 +136,7 @@ func getState() state {
 		return s
 	}
 	for row.Next() {
-		err = row.Scan(&currTerm, &votedFor, &leader, &commIndex)
+		err = row.Scan(&currTerm, &votedFor, &leader, &commIndex, &startIndex)
 	}
 	if err != nil {
 		return s
@@ -139,6 +146,7 @@ func getState() state {
 		votedFor:    votedFor,
 		leader:      leader,
 		commitIndex: commIndex,
+		startIndex:  startIndex,
 	}
 	row.Close()
 	mutex.Unlock()
@@ -180,7 +188,7 @@ func getNodesFromDB() nodes {
 func tableLog() {
 	db, err := sql.Open("sqlite3", dbName)
 
-	createStatementLog, err := db.Prepare("CREATE TABLE log (logIndex integer PRIMARY KEY AUTOINCREMENT, term integer, command text, votes integer, commited integer)")
+	createStatementLog, err := db.Prepare("CREATE TABLE IF NOT EXISTS log (logIndex integer PRIMARY KEY AUTOINCREMENT, term integer, command text, votes integer, commited integer)")
 	createStatementLog.Exec()
 	checkErr(err)
 
@@ -195,7 +203,7 @@ func tableLog() {
 func tableNextIndex() {
 	db, err := sql.Open("sqlite3", dbName)
 
-	createNextIndexStmt, err = db.Prepare("CREATE TABLE nextIndex (nodeId text, index integer)")
+	createNextIndexStmt, err = db.Prepare("CREATE TABLE IF NOT EXISTS nextIndex (nodeId text, index integer)")
 	createNextIndexStmt.Exec()
 	checkErr(err)
 

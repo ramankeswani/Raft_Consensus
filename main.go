@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -18,6 +17,7 @@ var chanStartHBCheck chan string
 var chanMessage chan string
 var chanSyncResp chan string
 var chanAppendResp chan string
+var isRecovering bool
 
 type connection struct {
 	nodeID string
@@ -52,6 +52,7 @@ func main() {
 	fmt.Println("I AM: ", nodeID)
 	fmt.Println("------------------------------")
 	c := make(chan int)
+	setFirstStartIndex()
 
 	// Starting Server
 	go server(myPort, nodeID)
@@ -76,8 +77,16 @@ func main() {
 		go heartbeat(otherNodes, nodeID, connMap, s)
 	} */
 
-	if strings.Compare(os.Args[3], "1") == 0 {
+	// Check if Node is Recovering
+	/* 	if strings.Compare(os.Args[3], "1") == 0 {
 		initRecovery(myPort)
+	} */
+
+	s := getState()
+	logFile("recover", "state main: "+strconv.Itoa(s.startIndex))
+	if s.startIndex > 1 {
+		initRecovery(myPort)
+		isRecovering = true
 	}
 
 	totalNodes = len(connMap) + 1
