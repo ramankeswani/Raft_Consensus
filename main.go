@@ -22,6 +22,7 @@ var isRecovering bool
 type connection struct {
 	nodeID string
 	conn   *net.TCPConn
+	status bool
 }
 
 var totalNodes int
@@ -62,11 +63,13 @@ func main() {
 	go sendConnectionRequest(otherNodes)
 	for range otherNodes {
 		conn := <-connChan
-		fmt.Println("connection channel received", conn)
-		connMap[conn.nodeID] = conn
-		chanTemp := make(chan string)
-		chanMap[conn.nodeID] = chanTemp
-		go sendMessage(conn.nodeID)
+		fmt.Println("connection channel received status: " + strconv.FormatBool(conn.status))
+		if conn.status {
+			connMap[conn.nodeID] = conn
+			chanTemp := make(chan string)
+			chanMap[conn.nodeID] = chanTemp
+			go sendMessage(conn.nodeID)
+		}
 	}
 
 	// TO-DO: Assuming node ALPHA to be the leader.

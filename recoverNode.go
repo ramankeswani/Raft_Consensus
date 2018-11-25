@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -13,7 +14,10 @@ func initRecovery(port int) {
 	logFile("recover", "initRecoveryStarts\n")
 	message := nodeID + " " + NodeRecoverMessage + " " + strconv.Itoa(port) + "\n"
 	for node := range otherNodes {
-		chanMap[otherNodes[node].nodeID] <- message
+		fmt.Println("init Recovery: chanMap[otherNodes[node].nodeID] nil?: " + strconv.FormatBool(nil != chanMap[otherNodes[node].nodeID]))
+		if nil != chanMap[otherNodes[node].nodeID] {
+			chanMap[otherNodes[node].nodeID] <- message
+		}
 	}
 	logFile("recover", "initRecoveryEnds\n")
 }
@@ -139,6 +143,9 @@ func initLogSync(message string) {
 	logFile("recover", "initLogSync Starts \n")
 	dataSlice := strings.Split(strings.TrimRight(message, "\n"), " ")
 	log := getLatestLog()
-	go synchronizeLogs(dataSlice[0], log.logIndex+1)
+	fmt.Println("init Log Sync log index: " + strconv.Itoa(log.logIndex))
+	if log.logIndex >= 1 {
+		go synchronizeLogs(dataSlice[0], log.logIndex+1)
+	}
 	logFile("recover", "initLogSync Ends \n")
 }

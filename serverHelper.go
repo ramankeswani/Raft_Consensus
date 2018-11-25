@@ -79,9 +79,11 @@ func countVotes(data []string) {
 			killTimer()
 			s := getState()
 			insertTableState(s.currentTerm, s.votedFor, myNodeID, 0, 0)
-			leader = true
 			term = s.currentTerm
-			go heartbeat(otherNodes, myNodeID, connMap, getState())
+			if !leader {
+				go heartbeat(otherNodes, myNodeID, connMap, getState())
+			}
+			leader = true
 			candidate = false
 			votes = 0
 			// Stores Next Commit Index for each Follower

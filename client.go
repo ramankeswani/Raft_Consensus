@@ -27,15 +27,18 @@ func client(port int, myPort int, connChan chan connection, remoteNodeID string)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", address)
 	checkError(err, "client")
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	st := checkError(err, "client")
 	c := connection{
 		nodeID: remoteNodeID,
 		conn:   conn,
+		status: st,
 	}
 	connChan <- c
 	fmt.Println("inserted into channel")
-	checkError(err, "client")
-	_, err = conn.Write([]byte("First request" + strconv.Itoa(myPort) + "\n"))
-	checkError(err, "client")
+	if st {
+		_, err = conn.Write([]byte("First request" + strconv.Itoa(myPort) + "\n"))
+		checkError(err, "client")
+	}
 
 }
 
