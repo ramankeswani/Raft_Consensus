@@ -139,6 +139,6 @@ func initLogSync(message string) {
 	logFile("recover", "initLogSync Starts \n")
 	dataSlice := strings.Split(strings.TrimRight(message, "\n"), " ")
 	log := getLatestLog()
-	go synchronizeLogs(dataSlice[0], log.logIndex)
+	go synchronizeLogs(dataSlice[0], log.logIndex+1)
 	logFile("recover", "initLogSync Ends \n")
 }
