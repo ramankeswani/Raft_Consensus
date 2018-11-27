@@ -67,15 +67,15 @@ func tableCluster(nodeID string) {
 		_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
 	} */
 
-	_, err = insertStatement.Exec("node1", "35.243.161.151", 5001)
-	_, err = insertStatement.Exec("node2", "35.237.91.21", 5002)
-	_, err = insertStatement.Exec("node3", "35.237.86.11", 5003)
-	_, err = insertStatement.Exec("node4", "35.227.32.56", 5004)
+	_, err = insertStatement.Exec("node1", "10.142.0.4", 5001)
+	_, err = insertStatement.Exec("node2", "10.142.0.5", 5002)
+	_, err = insertStatement.Exec("node3", "10.142.0.6", 5003)
+	_, err = insertStatement.Exec("node4", "10.142.0.7", 5004)
 	_, err = insertStatement.Exec("node5", "10.142.0.8", 5005)
 	_, err = insertStatement.Exec("node6", "10.142.0.9", 5006)
-	_, err = insertStatement.Exec("node7", "35.237.108.252", 5007)
-	_, err = insertStatement.Exec("node8", "35.245.209.248", 5008)
-	_, err = insertStatement.Exec("node9", "35.245.153.225", 5009)
+	_, err = insertStatement.Exec("node7", "10.142.0.10", 5007)
+	_, err = insertStatement.Exec("node8", "10.150.0.2", 5008)
+	_, err = insertStatement.Exec("node9", "10.150.0.3", 5009)
 
 	checkErr(err)
 
