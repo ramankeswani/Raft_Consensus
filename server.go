@@ -27,7 +27,8 @@ func server(myPort int, nodeID string) {
 	r = rand.New(source)
 	myNodeID = nodeID
 	fmt.Println("mynode id", myNodeID)
-	service := ":" + strconv.Itoa(myPort)
+	ip := getMyIP(nodeID)
+	service := ip + ":" + strconv.Itoa(myPort)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err, "server")
 	listener, err := net.ListenTCP("tcp", tcpAddr)
