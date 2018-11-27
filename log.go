@@ -13,7 +13,7 @@ func initLog(nodeID string) {
 	file, err := os.Create("logs/" + nodeID + ".txt")
 	checkError(err, "initLog")
 	f = file
-	t = "recover"
+	t = "*"
 }
 
 func logFile(tag string, message string) {

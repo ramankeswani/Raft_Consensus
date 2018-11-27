@@ -57,7 +57,7 @@ func tableCluster(nodeID string) {
 	dropStmt, err := db.Prepare("drop table if exists cluster")
 	dropStmt.Exec()
 
-	createStatement, err := db.Prepare("CREATE TABLE IF NOT EXISTS cluster (nodeID text PRIMARY KEY, address text, port integer)")
+	createStatement, err := db.Prepare("CREATE TABLE cluster (nodeID text PRIMARY KEY, address text, port integer)")
 	createStatement.Exec()
 
 	insertStatement, err := db.Prepare("INSERT INTO cluster(nodeID, address, port) values(?,?,?)")
@@ -66,8 +66,9 @@ func tableCluster(nodeID string) {
 	_, err = insertStatement.Exec("ALPHA", "127.0.0.1", 5000)
 	_, err = insertStatement.Exec("BETA", "127.0.0.1", 6000)
 	_, err = insertStatement.Exec("GAMMA", "127.0.0.1", 7000)
-	_, err = insertStatement.Exec("NODE4", "127.0.0.1", 7001)
-	_, err = insertStatement.Exec("NODE5", "127.0.0.1", 7002)
+	for i, j := 7001, 4; i <= 7006; i, j = i+1, j+1 {
+		_, err = insertStatement.Exec("NODE"+strconv.Itoa(j), "127.0.0.1", i)
+	}
 
 	checkErr(err)
 
@@ -149,8 +150,27 @@ func getState() state {
 		startIndex:  startIndex,
 	}
 	row.Close()
+	db.Close()
 	mutex.Unlock()
 	return s
+}
+
+func getTotalNodes() int {
+	fmt.Println("get Total Nodes start")
+	var count int
+	db, err := sql.Open("sqlite3", dbName)
+	checkErr(err)
+	rows, err := db.Query("SELECT count(*) FROM cluster")
+	checkErr(err)
+	for rows.Next() {
+		err = rows.Scan(&count)
+		fmt.Println("count:" + strconv.Itoa(count))
+		checkErr(err)
+	}
+	fmt.Println("get Total Nodes end")
+	db.Close()
+	return count
+
 }
 
 func getNodesFromDB() nodes {
@@ -181,6 +201,7 @@ func getNodesFromDB() nodes {
 
 	fmt.Println("getNodesFromDB Ends")
 	fmt.Println("------------------------------")
+	db.Close()
 	return ns
 
 }

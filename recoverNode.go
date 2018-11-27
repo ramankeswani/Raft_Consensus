@@ -38,7 +38,7 @@ func handleRecoveryMessage(message string) {
 		conn:   conn,
 	}
 	connMap[dataSlice[0]] = c
-	totalNodes++
+	//totalNodes++
 	logFile("recover", "handleRecoveryMessage Ends\n")
 }
 

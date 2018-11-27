@@ -63,7 +63,7 @@ func handleRequests(conn net.Conn) {
 		data, err := r.ReadString('\n')
 		if !checkError(err, "handleRequests") {
 			conn.Close()
-			totalNodes--
+			//totalNodes--
 			return
 		}
 

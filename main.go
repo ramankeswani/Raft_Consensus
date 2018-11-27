@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var logTag = "commit"
+var logTag = "*"
 var myPort int
 var nodeID string
 var otherNodes nodes
@@ -39,7 +39,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Provide IP, usage %s port nodeID RecoverFlag", os.Args[0])
 		os.Exit(1)
 	}
-
 	myPort, _ = strconv.Atoi(os.Args[1])
 	nodeID = os.Args[2]
 	initLog(nodeID)
@@ -50,6 +49,9 @@ func main() {
 	chanSyncResp = make(chan string)
 	chanAppendResp = make(chan string, 500)
 	tableCluster(nodeID)
+	ns := getNodesFromDB()
+	totalNodes = getTotalNodes()
+
 	fmt.Println("I AM: ", nodeID)
 	fmt.Println("------------------------------")
 	c := make(chan int)
@@ -58,7 +60,6 @@ func main() {
 	// Starting Server
 	go server(myPort, nodeID)
 
-	ns := getNodesFromDB()
 	populateOtherNodes(ns)
 	go sendConnectionRequest(otherNodes)
 	for range otherNodes {
@@ -92,7 +93,6 @@ func main() {
 		isRecovering = true
 	}
 
-	totalNodes = len(connMap) + 1
 	go userInput(connMap)
 	chanStartHBCheck <- "start"
 	//isCommited = make(map[int]bool)
