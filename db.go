@@ -63,12 +63,16 @@ func tableCluster(nodeID string) {
 	insertStatement, err := db.Prepare("INSERT INTO cluster(nodeID, address, port) values(?,?,?)")
 	checkErr(err)
 
+	/* for i, j := 1, 5001; i <= 9; i, j = i+1, j+1 {
+		_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
+	}
+	*/
 	_, err = insertStatement.Exec("node1", "35.243.161.151", 5001)
 	_, err = insertStatement.Exec("node2", "35.237.91.21", 5002)
 	_, err = insertStatement.Exec("node3", "35.237.86.11", 5003)
 	_, err = insertStatement.Exec("node4", "35.227.32.56", 5004)
-	_, err = insertStatement.Exec("node5", "104.196.184.220", 5005)
-	_, err = insertStatement.Exec("node6", "104.196.105.236", 5006)
+	_, err = insertStatement.Exec("node5", "10.142.0.7", 5005)
+	_, err = insertStatement.Exec("node6", "10.142.0.8", 5006)
 	_, err = insertStatement.Exec("node7", "35.237.108.252", 5007)
 	_, err = insertStatement.Exec("node8", "35.245.209.248", 5008)
 	_, err = insertStatement.Exec("node9", "35.245.153.225", 5009)
