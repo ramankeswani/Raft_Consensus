@@ -24,9 +24,10 @@ func client(port int, myPort int, connChan chan connection, remoteNodeID string,
 
 	remoteID = remoteNodeID
 	address := remoteAddress + ":" + strconv.Itoa(port)
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", address)
-	checkError(err, "client")
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	//	tcpAddr, err := net.ResolveTCPAddr("tcp4", address)
+	//checkError(err, "client")
+	//conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	conn, err := net.Dial("tcp", address)
 	st := checkError(err, "client")
 	c := connection{
 		nodeID: remoteNodeID,

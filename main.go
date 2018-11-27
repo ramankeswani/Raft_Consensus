@@ -21,7 +21,8 @@ var isRecovering bool
 
 type connection struct {
 	nodeID string
-	conn   *net.TCPConn
+	//conn   *net.TCPConn
+	conn   net.Conn
 	status bool
 }
 
