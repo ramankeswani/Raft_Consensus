@@ -15,7 +15,7 @@ Returns when Node Crashes Only
 */
 var remoteID string
 
-func client(port int, myPort int, connChan chan connection, remoteNodeID string) {
+func client(port int, myPort int, connChan chan connection, remoteNodeID string, remoteAddress string) {
 
 	if port == 0 {
 		fmt.Fprintf(os.Stderr, "Port not given")
@@ -23,7 +23,7 @@ func client(port int, myPort int, connChan chan connection, remoteNodeID string)
 	}
 
 	remoteID = remoteNodeID
-	address := "127.0.0.1:" + strconv.Itoa(port)
+	address := remoteAddress + ":" + strconv.Itoa(port)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", address)
 	checkError(err, "client")
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)

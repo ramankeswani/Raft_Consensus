@@ -116,7 +116,7 @@ func sendConnectionRequest(ns nodes) {
 	fmt.Println("\nSendConnectionRequest Starts")
 	for n := range ns {
 		fmt.Println(ns[n])
-		go client(ns[n].port, myPort, connChan, ns[n].nodeID)
+		go client(ns[n].port, myPort, connChan, ns[n].nodeID, ns[n].address)
 	}
 	fmt.Println("SendConnectionRequest Ends")
 	fmt.Println("------------------------------")
