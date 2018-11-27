@@ -12,3 +12,5 @@ go build github.com/mattn/go-sqlite3
 cd
 cd Raft_Consensus
 go build
+sudo mkdir databases
+sudo mkdir logs
