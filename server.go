@@ -27,11 +27,12 @@ func server(myPort int, nodeID string) {
 	r = rand.New(source)
 	myNodeID = nodeID
 	fmt.Println("mynode id", myNodeID)
-	ip := getMyIP(nodeID)
-	service := ip + ":" + strconv.Itoa(myPort)
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
-	checkError(err, "server")
-	listener, err := net.ListenTCP("tcp", tcpAddr)
+	//ip := getMyIP(nodeID)
+	//service := ip + ":" + strconv.Itoa(myPort)
+	//tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
+	//checkError(err, "server")
+	//listener, err := net.ListenTCP("tcp", tcpAddr)
+	listener, err := net.Listen("tcp", ":"+strconv.Itoa(myPort))
 	checkError(err, "server")
 
 	// Routine to track HeartBeat Timeout
