@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -11,6 +12,7 @@ var candidate bool
 var leader bool
 var votes int
 var nextIndex map[string]int
+var mutexHeartBeat = &sync.Mutex{}
 
 /*
 Sends RequestVoteRPC to all other Nodes
@@ -80,10 +82,12 @@ func countVotes(data []string) {
 			s := getState()
 			insertTableState(s.currentTerm, s.votedFor, myNodeID, 0, 0)
 			term = s.currentTerm
+			mutexHeartBeat.Lock()
 			if !leader {
 				go heartbeat(otherNodes, myNodeID, connMap, getState())
+				leader = true
 			}
-			leader = true
+			mutexHeartBeat.Unlock()
 			candidate = false
 			votes = 0
 			// Stores Next Commit Index for each Follower
