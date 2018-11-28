@@ -49,7 +49,7 @@ var logIndex int
 func tableCluster(nodeID string) {
 
 	fmt.Println("table cluster: " + nodeID)
-	dbName = "./databases/" + nodeID + ".db"
+	dbName = "databases/" + nodeID + ".db"
 	//os.Remove(dbName)
 
 	db, err := sql.Open("sqlite3", dbName)
