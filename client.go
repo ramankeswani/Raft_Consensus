@@ -27,8 +27,9 @@ func client(port int, myPort int, connChan chan connection, remoteNodeID string,
 	//	tcpAddr, err := net.ResolveTCPAddr("tcp4", address)
 	//checkError(err, "client")
 	//conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	fmt.Println("inside client address: " + address)
 	conn, err := net.Dial("tcp", address)
-	st := checkError(err, "client")
+	st := checkError(err, "client after dial")
 	c := connection{
 		nodeID: remoteNodeID,
 		conn:   conn,
