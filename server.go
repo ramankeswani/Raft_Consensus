@@ -127,12 +127,14 @@ func updateHBFlag(data string, timer *time.Timer) {
 Reset the timer when a heartbeat is received
 */
 func resetTimer() {
-	fmt.Println("Reset Timeout")
-	timeOut := 2*heartbeatTimeOut + r.Intn(2*heartbeatTimeOut)
-	//fmt.Println(timeOut)
-	//fmt.Println("time Now:", time.Now())
-	timer.Stop()
-	timer.Reset(time.Duration(timeOut) * time.Millisecond)
+	if timer != nil {
+		fmt.Println("Reset Timeout")
+		timeOut := 2*heartbeatTimeOut + r.Intn(2*heartbeatTimeOut)
+		//fmt.Println(timeOut)
+		//fmt.Println("time Now:", time.Now())
+		timer.Stop()
+		timer.Reset(time.Duration(timeOut) * time.Millisecond)
+	}
 }
 
 /*
