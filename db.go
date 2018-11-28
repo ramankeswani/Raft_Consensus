@@ -55,8 +55,8 @@ func tableCluster(nodeID string) {
 	db, err := sql.Open("sqlite3", dbName)
 	checkErr(err)
 
-	// dropStmt, err := db.Prepare("drop table if exists cluster")
-	// dropStmt.Exec()
+	dropStmt, err := db.Prepare("drop table if exists cluster")
+	dropStmt.Exec()
 
 	createStatement, err := db.Prepare("CREATE TABLE cluster (nodeID text PRIMARY KEY, address text, port integer)")
 	createStatement.Exec()
