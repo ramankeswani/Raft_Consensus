@@ -21,7 +21,7 @@ Server Modules Invoked from Main on load
 Arguements: Server Port, Self Node ID
 Returns/Exits on Node Failure Only
 */
-func server(myPort int, nodeID string) {
+func server(myPort string, nodeID string) {
 
 	source = rand.NewSource(time.Now().UnixNano())
 	r = rand.New(source)
@@ -32,7 +32,7 @@ func server(myPort int, nodeID string) {
 	//tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	//checkError(err, "server")
 	//listener, err := net.ListenTCP("tcp", tcpAddr)
-	p := ":" + strconv.Itoa(myPort)
+	p := ":" + myPort
 	fmt.Println("p: " + p)
 	listener, err := net.Listen("tcp", p)
 	checkError(err, "server")

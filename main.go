@@ -9,7 +9,7 @@ import (
 )
 
 var logTag = "*"
-var myPort int
+var myPort string
 var nodeID string
 var otherNodes nodes
 var connChan chan connection
@@ -40,7 +40,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Provide IP, usage %s port nodeID RecoverFlag", os.Args[0])
 		os.Exit(1)
 	}
-	myPort, _ = strconv.Atoi(os.Args[1])
+	myPort = os.Args[1]
 	nodeID = os.Args[2]
 	initLog(nodeID)
 	connChan = make(chan connection)
@@ -53,7 +53,7 @@ func main() {
 	ns := getNodesFromDB()
 	totalNodes = getTotalNodes()
 
-	fmt.Println("I AM: ", nodeID)
+	fmt.Println("I AM: ", nodeID+" my port"+os.Args[1])
 	fmt.Println("------------------------------")
 	c := make(chan int)
 	setFirstStartIndex()

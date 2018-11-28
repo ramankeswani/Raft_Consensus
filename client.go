@@ -15,7 +15,7 @@ Returns when Node Crashes Only
 */
 var remoteID string
 
-func client(port int, myPort int, connChan chan connection, remoteNodeID string, remoteAddress string) {
+func client(port int, myPort string, connChan chan connection, remoteNodeID string, remoteAddress string) {
 
 	if port == 0 {
 		fmt.Fprintf(os.Stderr, "Port not given")
@@ -38,7 +38,7 @@ func client(port int, myPort int, connChan chan connection, remoteNodeID string,
 	connChan <- c
 	fmt.Println("inserted into channel")
 	if st {
-		_, err = conn.Write([]byte("First request" + strconv.Itoa(myPort) + "\n"))
+		_, err = conn.Write([]byte("First request" + myPort + "\n"))
 		checkError(err, "client")
 	}
 

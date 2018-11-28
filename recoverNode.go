@@ -10,9 +10,9 @@ import (
 /*
 Invoked when a node restarts after failure. Communicates with other nodes to establish socket channels for communication
 */
-func initRecovery(port int) {
+func initRecovery(port string) {
 	logFile("recover", "initRecoveryStarts\n")
-	message := nodeID + " " + NodeRecoverMessage + " " + strconv.Itoa(port) + "\n"
+	message := nodeID + " " + NodeRecoverMessage + " " + port + "\n"
 	for node := range otherNodes {
 		fmt.Println("init Recovery: chanMap[otherNodes[node].nodeID] nil?: " + strconv.FormatBool(nil != chanMap[otherNodes[node].nodeID]))
 		if nil != chanMap[otherNodes[node].nodeID] {
