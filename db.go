@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"os"
 	"strconv"
 	"sync"
 
@@ -49,8 +48,9 @@ var logIndex int
 
 func tableCluster(nodeID string) {
 
+	fmt.Println("table cluster: " + nodeID)
 	dbName = "./databases/" + nodeID + ".db"
-	os.Remove(dbName)
+	//os.Remove(dbName)
 
 	db, err := sql.Open("sqlite3", dbName)
 	checkErr(err)
