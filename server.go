@@ -32,7 +32,9 @@ func server(myPort int, nodeID string) {
 	//tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	//checkError(err, "server")
 	//listener, err := net.ListenTCP("tcp", tcpAddr)
-	listener, err := net.Listen("tcp", ":"+strconv.Itoa(myPort))
+	p := ":" + strconv.Itoa(myPort)
+	fmt.Println("p: " + p)
+	listener, err := net.Listen("tcp", p)
 	checkError(err, "server")
 
 	// Routine to track HeartBeat Timeout
