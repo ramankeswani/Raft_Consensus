@@ -61,10 +61,11 @@ Returns/Exits on Node Failure Only
 */
 func handleRequests(conn net.Conn) {
 
-	r := bufio.NewReader(conn)
 	for {
+		r := bufio.NewReader(conn)
 		//fmt.Println("Server waiting for message")
 		data, err := r.ReadString('\n')
+		// data, err := r.ReadString('\n')
 		if !checkError(err, "handleRequests") {
 			conn.Close()
 			//totalNodes--
