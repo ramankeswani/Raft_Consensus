@@ -62,10 +62,9 @@ func tableCluster(nodeID string) {
 
 	insertStatement, err := db.Prepare("INSERT INTO cluster(nodeID, address, port) values(?,?,?)")
 	checkErr(err)
-
-	/* for i, j := 1, 5001; i <= 9; i, j = i+1, j+1 {
-		_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
-	} */
+	// for i, j := 1, 5001; i <= 9; i, j = i+1, j+1 {
+	// 	_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
+	// }
 
 	_, err = insertStatement.Exec("node1", "10.142.0.4", 5001)
 	_, err = insertStatement.Exec("node2", "10.142.0.5", 5002)
@@ -84,7 +83,7 @@ func tableCluster(nodeID string) {
 	tableState()
 }
 
-func getMyIP(nodeM string) (ip string) {
+func getIP(nodeM string) (ip string) {
 	fmt.Println("get my ip starts: " + dbName + " SELECT * FROM cluster where nodeID = " + nodeM)
 	db, err := sql.Open("sqlite3", dbName)
 	checkErr(err)
