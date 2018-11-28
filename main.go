@@ -60,7 +60,7 @@ func main() {
 
 	// Starting Server
 	go server(myPort, nodeID)
-	time.Sleep(1 * time.Minute)
+	time.Sleep(15 * time.Second)
 	populateOtherNodes(ns)
 	go sendConnectionRequest(otherNodes)
 	for range otherNodes {
