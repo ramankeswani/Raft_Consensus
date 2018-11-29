@@ -61,6 +61,7 @@ func main() {
 	// Starting Server
 	go server(myPort, nodeID)
 	time.Sleep(15 * time.Second)
+	go userInput(connMap)
 	populateOtherNodes(ns)
 	go sendConnectionRequest(otherNodes)
 	for range otherNodes {
@@ -93,8 +94,6 @@ func main() {
 		initRecovery(myPort)
 		isRecovering = true
 	}
-
-	go userInput(connMap)
 	chanStartHBCheck <- "start"
 	//isCommited = make(map[int]bool)
 
