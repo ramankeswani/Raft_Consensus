@@ -76,7 +76,7 @@ func tableCluster(nodeID string) {
 	_, err = insertStatement.Exec("node6", "10.142.0.9", 5006)
 	_, err = insertStatement.Exec("node7", "10.142.0.10", 5007)
 	_, err = insertStatement.Exec("node8", "10.142.0.12", 5008)
-	_, err = insertStatement.Exec("node9", "10.142.0.13", 5009)
+	_, err = insertStatement.Exec("node9", "10.150.0.2", 5009)
 
 	checkErr(err)
 
