@@ -1,10 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"strings"
+
+	"github.com/papertrail/go-tail/follower"
 )
 
 func userInput(connMap map[string]connection) {
@@ -12,9 +13,19 @@ func userInput(connMap map[string]connection) {
 	for key, value := range connMap {
 		fmt.Println("User Input key: " + key + " value: " + value.nodeID)
 	}
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		text, _ := reader.ReadString('\n')
+
+	t, _ := follower.New("userinput.txt", follower.Config{
+		Whence: io.SeekEnd,
+		Offset: 0,
+		Reopen: true,
+	})
+
+	//reader := bufio.NewReader(os.Stdin)
+	//for {
+
+	for line := range t.Lines() {
+		//text, _ := reader.ReadString('\n')
+		text := line.String()
 		fmt.Println("user entered: ", text)
 		s := getState()
 		if strings.Compare(myNodeID, s.leader) != 0 {

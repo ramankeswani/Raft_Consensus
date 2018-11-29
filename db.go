@@ -44,6 +44,7 @@ var updateNextIndexStmt *sql.Stmt
 var dbName string
 var mutex = &sync.Mutex{}
 var mutexLogTable = &sync.Mutex{}
+var mutexLogTableInsert = &sync.Mutex{}
 var logIndex int
 
 func tableCluster(nodeID string) {
@@ -282,6 +283,7 @@ func checkErr(err error) {
 }
 
 func insertLogTable(term int, command string, votes int) (prevLogIndex int, prevLogTerm int) {
+	mutexLogTableInsert.Lock()
 	logFile("append", "insertLogTable starts command: "+command+"\n")
 	res, err := insertLogStmt.Exec(term, command, votes, 0)
 	temp, _ := res.RowsAffected()
@@ -296,6 +298,7 @@ func insertLogTable(term int, command string, votes int) (prevLogIndex int, prev
 	logIndex, _ = res.LastInsertId()
 	logPrevious := getLogTable(int(logCurrent.logIndex - 1))
 	logFile("append", "insertLogTable previous tuple command: "+logPrevious.command+" index: "+strconv.Itoa(logPrevious.logIndex)+"\n")
+	mutexLogTableInsert.Unlock()
 	return int(logPrevious.logIndex), logPrevious.term
 }
 
