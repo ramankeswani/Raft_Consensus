@@ -39,7 +39,7 @@ func userInput(connMap map[string]connection) {
 
 func contactLeader(conn connection, text string) {
 	fmt.Println("Contact Leader Starts")
-	message := myNodeID + " " + AppendEntryFromClient + " " + text
+	message := myNodeID + " " + AppendEntryFromClient + " " + text + "\n"
 	_, err := conn.conn.Write([]byte(message))
 	checkError(err, "contactLeader")
 	fmt.Println("Contact Leader Ends")
