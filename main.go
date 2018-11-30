@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -18,6 +19,8 @@ var chanMessage chan string
 var chanSyncResp chan string
 var chanAppendResp chan string
 var isRecovering bool
+var mutexConnMap = &sync.Mutex{}
+var mutexChanMap = &sync.Mutex{}
 
 type connection struct {
 	nodeID string
@@ -60,16 +63,20 @@ func main() {
 
 	// Starting Server
 	go server(myPort, nodeID)
-	time.Sleep(120 * time.Second)
+	time.Sleep(3 * time.Second)
 	populateOtherNodes(ns)
 	go sendConnectionRequest(otherNodes)
 	for range otherNodes {
 		conn := <-connChan
 		fmt.Println("connection channel received status: " + strconv.FormatBool(conn.status))
 		if conn.status {
+			mutexConnMap.Lock()
 			connMap[conn.nodeID] = conn
+			mutexConnMap.Unlock()
 			chanTemp := make(chan string)
+			mutexChanMap.Lock()
 			chanMap[conn.nodeID] = chanTemp
+			mutexChanMap.Unlock()
 			go sendMessage(conn.nodeID)
 		}
 	}
