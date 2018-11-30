@@ -64,7 +64,11 @@ func tableCluster(nodeID string) {
 
 	insertStatement, err := db.Prepare("INSERT INTO cluster(nodeID, address, port) values(?,?,?)")
 	checkErr(err)
-	// for i, j := 1, 5001; i <= 9; i, j = i+1, j+1 {
+	for i, j := 1, 5001; i <= 8; i, j = i+1, j+1 {
+		_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
+	}
+
+	// for i, j := 17, 5017; i <= 24; i, j = i+1, j+1 {
 	// 	_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
 	// }
 
@@ -77,6 +81,15 @@ func tableCluster(nodeID string) {
 	_, err = insertStatement.Exec("node7", "10.142.0.10", 5007)
 	_, err = insertStatement.Exec("node8", "10.142.0.12", 5008)
 
+	_, err = insertStatement.Exec("node9", "10.142.0.4", 5009)
+	_, err = insertStatement.Exec("node10", "10.142.0.5", 5010)
+	_, err = insertStatement.Exec("node11", "10.142.0.6", 5011)
+	_, err = insertStatement.Exec("node12", "10.142.0.7", 5012)
+	_, err = insertStatement.Exec("node13", "10.142.0.8", 5013)
+	_, err = insertStatement.Exec("node14", "10.142.0.9", 5014)
+	_, err = insertStatement.Exec("node15", "10.142.0.10", 5015)
+	_, err = insertStatement.Exec("node16", "10.142.0.12", 5016)
+
 	_, err = insertStatement.Exec("node17", "10.150.0.3", 5017)
 	_, err = insertStatement.Exec("node18", "10.150.0.4", 5018)
 	_, err = insertStatement.Exec("node19", "10.150.0.5", 5019)
@@ -85,6 +98,15 @@ func tableCluster(nodeID string) {
 	_, err = insertStatement.Exec("node22", "10.150.0.8", 5022)
 	_, err = insertStatement.Exec("node23", "10.150.0.9", 5023)
 	_, err = insertStatement.Exec("node24", "10.150.0.2", 5024)
+
+	_, err = insertStatement.Exec("node25", "10.150.0.3", 5025)
+	_, err = insertStatement.Exec("node26", "10.150.0.4", 5026)
+	_, err = insertStatement.Exec("node27", "10.150.0.5", 5027)
+	_, err = insertStatement.Exec("node28", "10.150.0.6", 5028)
+	_, err = insertStatement.Exec("node29", "10.150.0.7", 5029)
+	_, err = insertStatement.Exec("node30", "10.150.0.8", 5030)
+	_, err = insertStatement.Exec("node31", "10.150.0.9", 5031)
+	_, err = insertStatement.Exec("node32", "10.150.0.2", 5032)
 
 	checkErr(err)
 
