@@ -77,14 +77,14 @@ func tableCluster(nodeID string) {
 	_, err = insertStatement.Exec("node7", "10.142.0.10", 5007)
 	_, err = insertStatement.Exec("node8", "10.142.0.12", 5008)
 
-	_, err = insertStatement.Exec("node17", "10.150.0.3", 5001)
-	_, err = insertStatement.Exec("node18", "10.150.0.4", 5002)
-	_, err = insertStatement.Exec("node19", "10.150.0.5", 5003)
-	_, err = insertStatement.Exec("node20", "10.150.0.6", 5004)
-	_, err = insertStatement.Exec("node21", "10.150.0.7", 5005)
-	_, err = insertStatement.Exec("node22", "10.150.0.8", 5006)
-	_, err = insertStatement.Exec("node23", "10.150.0.9", 5007)
-	_, err = insertStatement.Exec("node24", "10.150.0.2", 5008)
+	_, err = insertStatement.Exec("node17", "10.150.0.3", 5017)
+	_, err = insertStatement.Exec("node18", "10.150.0.4", 5018)
+	_, err = insertStatement.Exec("node19", "10.150.0.5", 5019)
+	_, err = insertStatement.Exec("node20", "10.150.0.6", 5020)
+	_, err = insertStatement.Exec("node21", "10.150.0.7", 5021)
+	_, err = insertStatement.Exec("node22", "10.150.0.8", 5022)
+	_, err = insertStatement.Exec("node23", "10.150.0.9", 5023)
+	_, err = insertStatement.Exec("node24", "10.150.0.2", 5024)
 
 	checkErr(err)
 
