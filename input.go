@@ -13,11 +13,11 @@ func userInput(connMap map[string]connection) {
 	for key, value := range connMap {
 		fmt.Println("User Input key: " + key + " value: " + value.nodeID)
 	}
-	filename := "userinput" + nodeID + ".txt"
+	//filename := "userinput" + nodeID + ".txt"
 	//file, err := os.Create(filename)
 	//defer file.Close()
 	//checkError(err, "user input")
-	t, _ := follower.New(filename, follower.Config{
+	t, _ := follower.New("userinput.txt", follower.Config{
 		Whence: io.SeekEnd,
 		Offset: 0,
 		Reopen: true,
