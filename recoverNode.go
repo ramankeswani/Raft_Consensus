@@ -146,7 +146,28 @@ func initLogSync(message string) {
 	log := getLatestLog()
 	fmt.Println("init Log Sync log index: " + strconv.Itoa(log.logIndex))
 	if log.logIndex >= 1 {
-		go synchronizeLogs(dataSlice[0], log.logIndex+1)
+		follLogIndex, _ := strconv.Atoi(dataSlice[2])
+		follLogTerm, _ := strconv.Atoi(dataSlice[3])
+		if log.logIndex != follLogIndex || log.term != follLogTerm {
+			go synchronizeLogs(dataSlice[0], log.logIndex+1)
+		}
 	}
 	logFile("recover", "initLogSync Ends \n")
 }
+
+/*
+Gets the latest log Entry from Recovering Node. Invoked during initLogSync()
+*/
+func getLatestLogFollower(nodeID string) (logIndex int, logTerm int) {
+	message := myNodeID + " " + LatestLogFollowerRequest + " " + strconv.Itoa(getState().currentTerm) + "\n"
+	chanMap[nodeID] <- message
+	response := <-chanLatestLog
+	dataSlice := strings.Split(strings.TrimRight(response, "\n"), " ")
+	logIndex, _ = strconv.Atoi(dataSlice[2])
+	logTerm, _ = strconv.Atoi(dataSlice[3])
+	return logIndex, logTerm
+}
+
+/*
+Invoked when follower has to provide latest log
+*/

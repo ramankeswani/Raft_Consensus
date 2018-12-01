@@ -17,6 +17,7 @@ var otherNodes nodes
 var connChan chan connection
 var chanStartHBCheck chan string
 var chanMessage chan string
+var chanLatestLog chan string
 var chanSyncResp chan string
 var chanAppendResp chan string
 var isRecovering bool
@@ -52,6 +53,7 @@ func main() {
 	connMap = make(map[string]connection)
 	chanMap = make(map[string]chan string)
 	chanSyncResp = make(chan string)
+	chanLatestLog = make(chan string)
 	chanAppendResp = make(chan string, 500)
 	tableCluster(nodeID)
 	ns := getNodesFromDB()
@@ -66,6 +68,8 @@ func main() {
 	go server(myPort, nodeID)
 	if strings.Compare(os.Args[3], "0") == 0 {
 		time.Sleep(120 * time.Second)
+	} else {
+		time.Sleep(3 * time.Second)
 	}
 	populateOtherNodes(ns)
 	go sendConnectionRequest(otherNodes)

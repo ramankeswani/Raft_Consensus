@@ -1,6 +1,6 @@
 package main
 
-const heartbeatInterval = 1500
+const heartbeatInterval = 500
 const heartbeatTimeOut = 1500
 const RequestVoteRPC = "RequestVoteRPC"
 const RequestVoteRPCReply = "RequestVoteRPCReply"
@@ -14,6 +14,8 @@ const CommitEntryReply = "CommitEntryReply"
 const NodeRecoverMessage = "NodeRecoverMessage"
 const SyncRequest = "SyncRequest"
 const SyncRequestReply = "SyncRequestReply"
+const LatestLogFollowerRequest = "LatestLogFollowerRequestRequest"
+const LatestLogFollowerReply = "LatestLogFollowerRequestReply"
 const SyncOnLoad = "SyncOnLoad"
 const SendToAll = "SendToAll"
 const REJECT = "REJECT"

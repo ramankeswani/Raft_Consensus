@@ -68,45 +68,42 @@ func tableCluster(nodeID string) {
 	// 	_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
 	// }
 
-	// for i, j := 17, 5017; i <= 24; i, j = i+1, j+1 {
-	// 	_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
-	// }
+	var ipMap = make(map[string]string)
+	ipMap["node1"] = "10.142.0.4"
+	ipMap["node2"] = "10.142.0.5"
+	ipMap["node3"] = "10.142.0.6"
+	ipMap["node4"] = "10.142.0.7"
+	ipMap["node5"] = "10.142.0.8"
+	ipMap["node6"] = "10.142.0.9"
+	ipMap["node7"] = "10.142.0.10"
+	ipMap["node8"] = "10.142.0.12"
+	ipMap["node17"] = "10.150.0.3"
+	ipMap["node18"] = "10.150.0.4"
+	ipMap["node19"] = "10.150.0.5"
+	ipMap["node20"] = "10.150.0.6"
+	ipMap["node21"] = "10.150.0.7"
+	ipMap["node22"] = "10.150.0.8"
+	ipMap["node23"] = "10.150.0.9"
+	ipMap["node24"] = "10.150.0.2"
+	ipMap["node33"] = "10.158.0.2"
+	ipMap["node34"] = "10.158.0.3"
+	ipMap["node35"] = "10.158.0.4"
+	ipMap["node36"] = "10.158.0.5"
+	ipMap["node37"] = "10.158.0.6"
+	ipMap["node38"] = "10.158.0.7"
+	ipMap["node39"] = "10.158.0.8"
+	ipMap["node40"] = "10.158.0.9"
 
-	_, err = insertStatement.Exec("node1", "10.142.0.4", 5001)
-	_, err = insertStatement.Exec("node2", "10.142.0.5", 5002)
-	_, err = insertStatement.Exec("node3", "10.142.0.6", 5003)
-	_, err = insertStatement.Exec("node4", "10.142.0.7", 5004)
-	_, err = insertStatement.Exec("node5", "10.142.0.8", 5005)
-	_, err = insertStatement.Exec("node6", "10.142.0.9", 5006)
-	_, err = insertStatement.Exec("node7", "10.142.0.10", 5007)
-	_, err = insertStatement.Exec("node8", "10.142.0.12", 5008)
+	ind := 1
+	j := 5000
 
-	_, err = insertStatement.Exec("node17", "10.142.0.4", 5017)
-	_, err = insertStatement.Exec("node18", "10.142.0.5", 5018)
-	_, err = insertStatement.Exec("node19", "10.142.0.6", 5019)
-	_, err = insertStatement.Exec("node20", "10.142.0.7", 5020)
-	_, err = insertStatement.Exec("node21", "10.142.0.8", 5021)
-	_, err = insertStatement.Exec("node22", "10.142.0.9", 5022)
-	_, err = insertStatement.Exec("node23", "10.142.0.10", 5023)
-	_, err = insertStatement.Exec("node24", "10.142.0.12", 5024)
-
-	_, err = insertStatement.Exec("node9", "10.150.0.3", 5009)
-	_, err = insertStatement.Exec("node10", "10.150.0.4", 5010)
-	_, err = insertStatement.Exec("node11", "10.150.0.5", 5011)
-	_, err = insertStatement.Exec("node12", "10.150.0.6", 5012)
-	_, err = insertStatement.Exec("node13", "10.150.0.7", 5013)
-	_, err = insertStatement.Exec("node14", "10.150.0.8", 5014)
-	_, err = insertStatement.Exec("node15", "10.150.0.9", 5015)
-	_, err = insertStatement.Exec("node16", "10.150.0.2", 5016)
-
-	_, err = insertStatement.Exec("node25", "10.150.0.3", 5025)
-	_, err = insertStatement.Exec("node26", "10.150.0.4", 5026)
-	_, err = insertStatement.Exec("node27", "10.150.0.5", 5027)
-	_, err = insertStatement.Exec("node28", "10.150.0.6", 5028)
-	_, err = insertStatement.Exec("node29", "10.150.0.7", 5029)
-	_, err = insertStatement.Exec("node30", "10.150.0.8", 5030)
-	_, err = insertStatement.Exec("node31", "10.150.0.9", 5031)
-	_, err = insertStatement.Exec("node32", "10.150.0.2", 5032)
+	for _, v := range ipMap {
+		for i := 0; i < 3; i++ {
+			name := "node" + strconv.Itoa(i*24+ind)
+			_, err = insertStatement.Exec(name, v, j+i*24+ind)
+		}
+		ind++
+	}
 
 	checkErr(err)
 
