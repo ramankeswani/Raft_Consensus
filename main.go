@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -63,7 +64,9 @@ func main() {
 
 	// Starting Server
 	go server(myPort, nodeID)
-	time.Sleep(120 * time.Second)
+	if strings.Compare(os.Args[3], "0") == 0 {
+		time.Sleep(120 * time.Second)
+	}
 	populateOtherNodes(ns)
 	go sendConnectionRequest(otherNodes)
 	for range otherNodes {

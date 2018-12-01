@@ -5,15 +5,21 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 var mutexUpdateVote = &sync.Mutex{}
+var mutexAppendRPC = &sync.Mutex{}
 var commitIndex []int
+var startTime time.Time
+var dif time.Duration
 
 /*
 Creates Append Entry RPC Request and sends the request to all Clients
 */
 func appendEntryInit(command string) {
+	mutexAppendRPC.Lock()
+	startTime = time.Now()
 	logFile("append", "Append Entry Init Starts Map len:"+strconv.Itoa(len(connMap))+" command: "+command+"\n")
 	prevLogIndex, prevLogTerm := insertLogTable(term, command, 1)
 	logFile("append", "id: "+strconv.Itoa(prevLogIndex)+"\n")
@@ -32,6 +38,7 @@ func appendEntryInit(command string) {
 		chanMap[otherNodes[node].nodeID] <- message
 	}
 	logFile("append", "Append Entry Init Ends\n")
+	mutexAppendRPC.Unlock()
 }
 
 /*
@@ -211,6 +218,10 @@ func handleCommitEntryReply(message string) {
 		logFile("commit", "logIndex: "+strconv.Itoa(tempLogIndex)+" "+"map: key: "+dataSlice[0]+" val: "+strconv.Itoa(nextIndex[dataSlice[0]])+"\n")
 		nextIndex[dataSlice[0]] = tempLogIndex + 1
 		logFile("commit", "Next Index "+dataSlice[0]+" "+strconv.Itoa(tempLogIndex+1)+"\n")
+		if dif.Nanoseconds() != 0 {
+			dif = time.Now().Sub(startTime)
+			fmt.Println("----------replication timeout-----------: " + strconv.Itoa(int(dif)))
+		}
 	}
 	logFile("commit", "handleCommitEntryReply Ends\n")
 }

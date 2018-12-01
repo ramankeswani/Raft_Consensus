@@ -18,9 +18,12 @@ var mutexHeartBeat = &sync.Mutex{}
 Sends RequestVoteRPC to all other Nodes
 Arguments: Self Node ID
 */
+var electionStartTime time.Time
+
 func initiateElection(myNodeID string) {
 
 	fmt.Println("initiate Election Begins:", time.Now())
+	electionStartTime = time.Now()
 	candidate = true
 	votes = 0
 	s := getState()
@@ -86,6 +89,8 @@ func countVotes(data []string) {
 			if !leader {
 				go heartbeat(otherNodes, myNodeID, connMap, getState())
 				leader = true
+				difference := time.Now().Sub(electionStartTime)
+				fmt.Println("------ Election finish ---- Total Time: " + strconv.Itoa(int(difference.Nanoseconds())))
 			}
 			mutexHeartBeat.Unlock()
 			candidate = false
