@@ -68,39 +68,42 @@ func tableCluster(nodeID string) {
 	// 	_, err = insertStatement.Exec("node"+strconv.Itoa(i), "127.0.0.1", j)
 	// }
 
-	var ipMap = make(map[string]string)
-	ipMap["node1"] = "10.142.0.4"
-	ipMap["node2"] = "10.142.0.5"
-	ipMap["node3"] = "10.142.0.6"
-	ipMap["node4"] = "10.142.0.7"
-	ipMap["node5"] = "10.142.0.8"
-	ipMap["node6"] = "10.142.0.9"
-	ipMap["node7"] = "10.142.0.10"
-	ipMap["node8"] = "10.142.0.12"
-	ipMap["node17"] = "10.150.0.3"
-	ipMap["node18"] = "10.150.0.4"
-	ipMap["node19"] = "10.150.0.5"
-	ipMap["node20"] = "10.150.0.6"
-	ipMap["node21"] = "10.150.0.7"
-	ipMap["node22"] = "10.150.0.8"
-	ipMap["node23"] = "10.150.0.9"
-	ipMap["node24"] = "10.150.0.2"
-	ipMap["node33"] = "10.158.0.2"
-	ipMap["node34"] = "10.158.0.3"
-	ipMap["node35"] = "10.158.0.4"
-	ipMap["node36"] = "10.158.0.5"
-	ipMap["node37"] = "10.158.0.6"
-	ipMap["node38"] = "10.158.0.7"
-	ipMap["node39"] = "10.158.0.8"
-	ipMap["node40"] = "10.158.0.9"
+	// var ipMap = make(map[string]string)
+	// ipMap["node1"] = "10.142.0.4"
+	// ipMap["node2"] = "10.142.0.5"
+	// ipMap["node3"] = "10.142.0.6"
+	// ipMap["node4"] = "10.142.0.7"
+	// ipMap["node5"] = "10.142.0.8"
+	// ipMap["node6"] = "10.142.0.9"
+	// ipMap["node7"] = "10.142.0.10"
+	// ipMap["node8"] = "10.142.0.12"
+	// ipMap["node17"] = "10.150.0.3"
+	// ipMap["node18"] = "10.150.0.4"
+	// ipMap["node19"] = "10.150.0.5"
+	// ipMap["node20"] = "10.150.0.6"
+	// ipMap["node21"] = "10.150.0.7"
+	// ipMap["node22"] = "10.150.0.8"
+	// ipMap["node23"] = "10.150.0.9"
+	// ipMap["node24"] = "10.150.0.2"
+
+	ipMap := []string{"10.142.0.4", "10.142.0.5", "10.142.0.6", "10.142.0.7", "10.142.0.8", "10.142.0.9", "10.142.0.10",
+		"10.142.0.12", "10.150.0.3", "10.150.0.4", "10.150.0.5", "10.150.0.6", "10.150.0.7", "10.150.0.8", "10.150.0.9", "10.150.0.2"}
+	// ipMap["node33"] = "10.158.0.2"
+	// ipMap["node34"] = "10.158.0.3"
+	// ipMap["node35"] = "10.158.0.4"
+	// ipMap["node36"] = "10.158.0.5"
+	// ipMap["node37"] = "10.158.0.6"
+	// ipMap["node38"] = "10.158.0.7"
+	// ipMap["node39"] = "10.158.0.8"
+	// ipMap["node40"] = "10.158.0.9"
 
 	ind := 1
 	j := 5000
 
 	for _, v := range ipMap {
 		for i := 0; i < 3; i++ {
-			name := "node" + strconv.Itoa(i*24+ind)
-			_, err = insertStatement.Exec(name, v, j+i*24+ind)
+			name := "node" + strconv.Itoa(i*16+ind)
+			_, err = insertStatement.Exec(name, v, j+i*16+ind)
 		}
 		ind++
 	}
