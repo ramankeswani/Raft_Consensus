@@ -218,10 +218,10 @@ func handleCommitEntryReply(message string) {
 		logFile("commit", "logIndex: "+strconv.Itoa(tempLogIndex)+" "+"map: key: "+dataSlice[0]+" val: "+strconv.Itoa(nextIndex[dataSlice[0]])+"\n")
 		nextIndex[dataSlice[0]] = tempLogIndex + 1
 		logFile("commit", "Next Index "+dataSlice[0]+" "+strconv.Itoa(tempLogIndex+1)+"\n")
-		if dif.Nanoseconds() != 0 {
-			dif = time.Now().Sub(startTime)
-			fmt.Println("----------replication timeout-----------: " + strconv.Itoa(int(dif)))
-		}
+		//if dif.Nanoseconds() != 0 {
+		dif = time.Now().Sub(startTime)
+		fmt.Println("----------replication timeout-----------: " + strconv.Itoa(int(dif)))
+		//}
 	}
 	logFile("commit", "handleCommitEntryReply Ends\n")
 }
