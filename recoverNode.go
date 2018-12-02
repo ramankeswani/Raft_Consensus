@@ -80,7 +80,7 @@ func prepareAppendEntryRequest(nodeID string, logIndex int) (message string) {
 Sends Append Entry to Node being recovered
 */
 func sendAppendRequest(nodeID string, logIndex int) {
-	logFile("recover", "sendAppendRequest starts \n")
+	logFile("recover", "sendAppendRequest starts logIndex: "+strconv.Itoa(logIndex)+"\n")
 	// LeaderNodeID | SyncRequest | Current Term | PrevLogIndex | PrevLogTerm | Log Command | New Log Index | CommitFlag
 	message := prepareAppendEntryRequest(nodeID, logIndex)
 	chanMap[nodeID] <- message
@@ -104,8 +104,9 @@ func sendAppendRequest(nodeID string, logIndex int) {
 Overwrite logs to the follower
 */
 func overwriteLogs(nodeID string, logIndex int) {
-	logFile("recover", "overwriteLogs Starts \n")
+	logFile("recover", "overwriteLogs Starts + logIndex \n"+strconv.Itoa(logIndex)+"\n")
 	n := getLatestLog().logIndex
+	logFile("recover", "overwriteLogs  + n: \n"+strconv.Itoa(n)+"\n")
 	if logIndex <= n {
 		go sendAppendRequest(nodeID, logIndex)
 	}
@@ -115,6 +116,7 @@ func overwriteLogs(nodeID string, logIndex int) {
 /*
 Handles SyncRequest and sends back appropriate response to leader
 */
+// LeaderNodeID | SyncRequest | Current Term | PrevLogIndex | PrevLogTerm | Log Command | New Log Index | CommitFlag
 func handleSyncRequest(message string) {
 	logFile("recover", "handleSyncRequest Starts \n")
 	go handleAppendEntryRPCFromLeader(message, true)
@@ -130,9 +132,6 @@ func handleSyncRequest(message string) {
 
 func temp(message string, nodeID string, leader string) {
 	logFile("recover", "temp leader: "+leader+" nodeid: "+nodeID+" null == chanMap[leadar] "+strconv.FormatBool(chanMap[leader] == nil))
-	for k := range chanMap {
-		logFile("recover", "map key: "+k+"\n")
-	}
 	chanMap[leader] <- message
 	logFile("recover", "temp Ends \n")
 }
