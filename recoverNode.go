@@ -47,9 +47,9 @@ func handleRecoveryMessage(message string) {
 Invoked when a follower rejects AppendEntryRequest.
 Decrements NextIndex and send AppendEntry until follower accepts.
 */
-func synchronizeLogs(nodeID string, logIndex int) {
-	logFile("recover", "synchronize logs starts nodeid: "+nodeID+" logIndex: "+strconv.Itoa(logIndex)+"\n")
-	nextIndex[nodeID] = logIndex - 1
+func synchronizeLogs(nodeID string, li int) {
+	logFile("recover", "synchronize logs starts nodeid: "+nodeID+" logIndex: "+strconv.Itoa(li)+"\n")
+	nextIndex[nodeID] = li - 1
 	go sendAppendRequest(nodeID, nextIndex[nodeID])
 	logFile("recover", "synchronize logs ends\n")
 }
@@ -80,7 +80,7 @@ func prepareAppendEntryRequest(nodeID string, logIndex int) (message string) {
 Sends Append Entry to Node being recovered
 */
 func sendAppendRequest(nodeID string, li int) {
-	logFile("recover", "sendAppendRequest starts logIndex: "+strconv.Itoa(logIndex)+"\n")
+	logFile("recover", "sendAppendRequest starts logIndex: "+strconv.Itoa(li)+"\n")
 	// LeaderNodeID | SyncRequest | Current Term | PrevLogIndex | PrevLogTerm | Log Command | New Log Index | CommitFlag
 	message := prepareAppendEntryRequest(nodeID, li)
 	chanMap[nodeID] <- message
