@@ -1,6 +1,6 @@
 package main
 
-const heartbeatInterval = 500
+const heartbeatInterval = 1000
 const heartbeatTimeOut = 1500
 const RequestVoteRPC = "RequestVoteRPC"
 const RequestVoteRPCReply = "RequestVoteRPCReply"

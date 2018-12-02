@@ -111,7 +111,6 @@ func tableCluster(nodeID string) {
 	checkErr(err)
 
 	fmt.Println("-----------------------------------------")
-
 	tableState()
 }
 
@@ -153,13 +152,15 @@ func tableState() {
 }
 
 func setFirstStartIndex() {
+	fmt.Println("set first start")
 	insertTableState(0, "", "", 0, 1)
 }
 
 func insertTableState(currentTerm int, votedFor string, leader string, commitIndex int, startIndex int) (res bool) {
-	startIndex = getState().startIndex + startIndex
+	si := getState().startIndex + startIndex
+	fmt.Println("si" + strconv.Itoa(si))
 	delStateStmt.Exec()
-	_, err := insertStateStmt.Exec(currentTerm, votedFor, leader, commitIndex, startIndex)
+	_, err := insertStateStmt.Exec(currentTerm, votedFor, leader, commitIndex, si)
 	checkErr(err)
 	if err != nil {
 		return false

@@ -69,7 +69,7 @@ func main() {
 	if strings.Compare(os.Args[3], "0") == 0 {
 		time.Sleep(120 * time.Second)
 	} else {
-		time.Sleep(3 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 	populateOtherNodes(ns)
 	go sendConnectionRequest(otherNodes)

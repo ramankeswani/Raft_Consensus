@@ -63,7 +63,9 @@ func handleAppendEntryRPCFromLeader(message string, sendRespFlag bool) {
 					" " + dataSlice[6] + "\n"
 				chanMap[dataSlice[0]] <- message
 				if sendRespFlag {
+					logFile("recover", "handleAppendEntryRPCFromLeader sendRespFlag true\n")
 					chanAppendResp <- message
+					logFile("recover", "handleAppendEntryRPCFromLeader Ends reject\n")
 				}
 				return
 			}
