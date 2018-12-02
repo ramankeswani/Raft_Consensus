@@ -83,14 +83,17 @@ func sendAppendRequest(nodeID string, li int) {
 	logFile("recover", "sendAppendRequest starts logIndex: "+strconv.Itoa(li)+"\n")
 	// LeaderNodeID | SyncRequest | Current Term | PrevLogIndex | PrevLogTerm | Log Command | New Log Index | CommitFlag
 	message := prepareAppendEntryRequest(nodeID, li)
+	logFile("recover", message)
 	chanMap[nodeID] <- message
 	response := <-chanSyncResp
 	logFile("recover", "sendAppendRequest respones: "+response+"\n")
 	dataSlice := strings.Split(strings.TrimSuffix(response, "\n"), " ")
+	dataSliceMessage := strings.Split(strings.TrimSuffix(message, "\n"), " ")
 	if strings.Compare(dataSlice[2], ACCEPT) == 0 {
 		//go handleAppendEntryRPCReply(response)
-		if strings.Compare(dataSlice[3], "1") == 0 {
+		if strings.Compare(dataSliceMessage[7], "1") == 0 {
 			nextIndex[nodeID] = li + 1
+			logFile("recover", "nextIndex: "+strconv.Itoa(nextIndex[nodeID]))
 		}
 		go overwriteLogs(nodeID, li+1)
 	}
