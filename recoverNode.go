@@ -79,10 +79,10 @@ func prepareAppendEntryRequest(nodeID string, logIndex int) (message string) {
 /*
 Sends Append Entry to Node being recovered
 */
-func sendAppendRequest(nodeID string, logIndex int) {
+func sendAppendRequest(nodeID string, li int) {
 	logFile("recover", "sendAppendRequest starts logIndex: "+strconv.Itoa(logIndex)+"\n")
 	// LeaderNodeID | SyncRequest | Current Term | PrevLogIndex | PrevLogTerm | Log Command | New Log Index | CommitFlag
-	message := prepareAppendEntryRequest(nodeID, logIndex)
+	message := prepareAppendEntryRequest(nodeID, li)
 	chanMap[nodeID] <- message
 	response := <-chanSyncResp
 	logFile("recover", "sendAppendRequest respones: "+response+"\n")
@@ -90,9 +90,9 @@ func sendAppendRequest(nodeID string, logIndex int) {
 	if strings.Compare(dataSlice[2], ACCEPT) == 0 {
 		//go handleAppendEntryRPCReply(response)
 		if strings.Compare(dataSlice[3], "1") == 0 {
-			nextIndex[nodeID] = logIndex + 1
+			nextIndex[nodeID] = li + 1
 		}
-		go overwriteLogs(nodeID, logIndex+1)
+		go overwriteLogs(nodeID, li+1)
 	}
 	/* else {
 		go sendAppendRequest(nodeID, logIndex-1)
@@ -104,7 +104,7 @@ func sendAppendRequest(nodeID string, logIndex int) {
 Overwrite logs to the follower
 */
 func overwriteLogs(nodeID string, logIndex int) {
-	logFile("recover", "overwriteLogs Starts + logIndex \n"+strconv.Itoa(logIndex)+"\n")
+	logFile("recover", "overwriteLogs Starts + logIndex "+strconv.Itoa(logIndex)+"\n")
 	n := getLatestLog().logIndex
 	logFile("recover", "overwriteLogs  + n: \n"+strconv.Itoa(n)+"\n")
 	if logIndex <= n {
