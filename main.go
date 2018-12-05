@@ -67,7 +67,7 @@ func main() {
 	// Starting Server
 	go server(myPort, nodeID)
 	if strings.Compare(os.Args[3], "0") == 0 {
-		time.Sleep(120 * time.Second)
+		time.Sleep(45 * time.Second)
 	} else {
 		time.Sleep(10 * time.Second)
 	}
