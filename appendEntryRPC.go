@@ -99,24 +99,24 @@ NodeID | AppendEntryRPCReply | ACCEPT | LogIndex
 func handleAppendEntryRPCReply(message string) {
 	mutexUpdateVote.Lock()
 	logFile("recover", "handleAppendEntryRPCReply Starts\n")
-	dataSlice := strings.Split(strings.TrimSuffix(message, "\n"), " ")
+	dataSliceT := strings.Split(strings.TrimSuffix(message, "\n"), " ")
 	logFile("recover", "handleAppendEntryRPCReply message: "+message)
-	if strings.Compare(dataSlice[2], ACCEPT) == 0 {
-		logIndex, _ := strconv.Atoi(dataSlice[3])
-		logFile("recover", "handleAppendEntryRPCReply term]: "+dataSlice[3]+" logindex: "+strconv.Itoa(logIndex)+"\n")
-		votes := incrementVoteCount(logIndex)
+	if strings.Compare(dataSliceT[2], ACCEPT) == 0 {
+		lI, _ := strconv.Atoi(dataSliceT[3])
+		logFile("recover", "handleAppendEntryRPCReply term]: "+dataSliceT[3]+" logindex: "+strconv.Itoa(lI)+"\n")
+		votes := incrementVoteCount(lI)
 		logFile("recover", "handleAppendEntryRPCReply votes: "+strconv.Itoa(votes)+"\n")
 		if float32(float32(votes)/float32(totalNodes)) > 0.5 {
-			l := getLogTable(logIndex)
+			l := getLogTable(lI)
 			logFile("recover", "majority isCommited[logIndex]: "+strconv.Itoa(l.isCommited)+"\n")
 			if l.isCommited == 0 {
-				sendCommitRequest(logIndex)
-				commitLog(logIndex)
+				sendCommitRequest(lI)
+				commitLog(lI)
 			}
 		}
 	} else {
-		logIndex, _ = strconv.Atoi(dataSlice[5])
-		go synchronizeLogs(dataSlice[0], logIndex)
+		logIndexT, _ := strconv.Atoi(dataSliceT[5])
+		go synchronizeLogs(dataSliceT[0], logIndexT)
 	}
 	logFile("recover", "handleAppendEntryRPCReply Ends\n")
 	mutexUpdateVote.Unlock()
