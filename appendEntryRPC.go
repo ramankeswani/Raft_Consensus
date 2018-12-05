@@ -101,8 +101,8 @@ func handleAppendEntryRPCReply(message string) {
 	logFile("recover", "handleAppendEntryRPCReply Starts\n")
 	dataSliceT := strings.Split(strings.TrimSuffix(message, "\n"), " ")
 	logFile("recover", "handleAppendEntryRPCReply message: "+message)
+	lI, _ := strconv.Atoi(dataSliceT[3])
 	if strings.Compare(dataSliceT[2], ACCEPT) == 0 {
-		lI, _ := strconv.Atoi(dataSliceT[3])
 		logFile("recover", "handleAppendEntryRPCReply term]: "+dataSliceT[3]+" logindex: "+strconv.Itoa(lI)+"\n")
 		votes := incrementVoteCount(lI)
 		logFile("recover", "handleAppendEntryRPCReply votes: "+strconv.Itoa(votes)+"\n")
@@ -115,8 +115,7 @@ func handleAppendEntryRPCReply(message string) {
 			}
 		}
 	} else {
-		logIndexT, _ := strconv.Atoi(dataSliceT[5])
-		go synchronizeLogs(dataSliceT[0], logIndexT)
+		go synchronizeLogs(dataSliceT[0], lI)
 	}
 	logFile("recover", "handleAppendEntryRPCReply Ends\n")
 	mutexUpdateVote.Unlock()
