@@ -1,0 +1,16 @@
+node1 --zone us-east1-b
+node2 --zone us-east1-b
+node3 --zone us-east1-b
+node4 --zone us-east1-b
+node5 --zone us-east1-b
+node6 --zone us-east1-b
+node7 --zone us-east1-b
+node8 --zone us-east1-b
+node17 --zone us-east4-a
+node18 --zone us-east4-a
+node19 --zone us-east4-a
+node20 --zone us-east4-a
+node21 --zone us-east4-a
+node22 --zone us-east4-a
+node23 --zone us-east4-a
+node24 --zone us-east4-a
